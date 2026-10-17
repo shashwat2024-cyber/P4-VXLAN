@@ -1,0 +1,16 @@
+Project: Performance Evaluation and Tenant Isolation of P4-Based VXLAN
+Environment: BMv2 simple_switch + Mininet under WSL2
+Test: h1 (192.168.10.1) to h2 (192.168.10.2), iperf3 TCP
+Client command: h1 iperf3 -c 192.168.10.2 -t N
+Endpoint MTU adjustment: 1450
+Trial 1 duration: 5 seconds
+Trial 1 sender: 44.9 Mbps; receiver: 36.8 Mbps; retransmissions: 0
+Trial 2 duration: 10 seconds
+Trial 2 sender: 42.1 Mbps; receiver: 35.8 Mbps; retransmissions: 137
+Trial 3 duration: 10 seconds
+Trial 3 sender: 36.5 Mbps; receiver: 34.5 Mbps; retransmissions: 191
+Mean receiver throughput for the two 10-second trials: 35.15 Mbps
+Trial 1 is a different duration and is not included in that mean.
+These are software-emulation results, not hardware benchmarks.
+Latency, packet loss, baseline comparison, and tenant-isolation results
+must be measured and recorded separately. Do not infer them from iperf.

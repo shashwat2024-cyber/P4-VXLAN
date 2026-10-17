@@ -1,0 +1,22 @@
+{
+  "underlay": {
+    "subnet": "10.0.0.0/24"
+  },
+  "tenants": [
+    {
+      "name": "TenantA",
+      "vni": 1001,
+      "subnet": "192.168.10.0/24",
+      "hosts": ["h1", "h2"]
+    },
+    {
+      "name": "TenantB",
+      "vni": 1002,
+      "subnet": "192.168.20.0/24",
+      "hosts": ["h3", "h4"]
+    }
+  ],
+  "isolation": {
+    "allow_cross_tenant_traffic": false
+  }
+}

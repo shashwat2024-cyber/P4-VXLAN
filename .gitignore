@@ -1,0 +1,29 @@
+__pycache__/
+*.pyc
+logs/*
+results/*.log
+results/*.pcap
+results/*.json
+results/*.p4i
+results/*.p4info.txt
+.venv/
+
+# Local dependency repositories (keep locally; do not copy into our GitHub repo)
+/p4-guide/
+/p4-tutorials/
+
+# Generated compiler outputs
+/results/*.json
+/results/*.p4i
+/results/*.p4info.txt
+/results/*.p4info.txtpb
+
+# Generated build output
+/build/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local experiment output
+*.log

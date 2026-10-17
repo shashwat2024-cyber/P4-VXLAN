@@ -1,0 +1,4 @@
+configuration,trial,duration_seconds,sender_mbps,receiver_mbps,retransmissions,mtu
+VXLAN_TenantA_MTU1450,1,5,44.9,36.8,0,1450
+VXLAN_TenantA_MTU1450,2,10,42.1,35.8,137,1450
+VXLAN_TenantA_MTU1450,3,10,36.5,34.5,191,1450
