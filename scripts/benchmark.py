@@ -62,6 +62,9 @@ def main():
         v2.cmd("ip link set dev vtep2-eth3 address 02:00:00:00:01:02")
 
         hosts = {name: net.get(name) for name in ("h1", "h2", "h3", "h4")}
+        # Leave room for VXLAN encapsulation on every endpoint.
+        for name, host in hosts.items():
+            host.cmd("ip link set dev %s-eth0 mtu 1450" % name)
         neighbors = [
             ("h1", "192.168.10.2", "00:00:00:00:10:02"),
             ("h2", "192.168.10.1", "00:00:00:00:10:01"),
