@@ -1,0 +1,10 @@
+flowchart LR
+    H1["h1 · Tenant A<br/>192.168.10.1"] --> V1["P4 VTEP1<br/>10.0.0.1"]
+    H3["h3 · Tenant B<br/>192.168.20.1"] --> V1
+    V1 <--> U["OVS underlay<br/>s1 · UDP/4789"]
+    U <--> V2["P4 VTEP2<br/>10.0.0.2"]
+    V2 --> H2["h2 · Tenant A<br/>192.168.10.2"]
+    V2 --> H4["h4 · Tenant B<br/>192.168.20.2"]
+
+    H1 -. "VNI 1001" .-> H2
+    H3 -. "VNI 1002" .-> H4

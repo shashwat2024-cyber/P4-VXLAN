@@ -9,7 +9,7 @@ from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-JSON = os.path.join(ROOT, "build", "vxlan.json", "vxlan.json")
+JSON = os.path.join(ROOT, "build", "vxlan.json")
 
 
 class P4Switch(Switch):

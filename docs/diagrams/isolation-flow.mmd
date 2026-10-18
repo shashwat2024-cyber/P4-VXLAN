@@ -1,0 +1,7 @@
+flowchart TD
+    A["Packet arrives at VTEP"] --> B{"VXLAN and inner headers valid?"}
+    B -- No --> D["Drop packet"]
+    B -- Yes --> C["Lookup exact VNI + inner destination"]
+    C --> E{"Matching table entry?"}
+    E -- Yes --> F["Decapsulate to configured output port"]
+    E -- No --> D

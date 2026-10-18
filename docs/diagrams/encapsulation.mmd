@@ -1,0 +1,10 @@
+flowchart LR
+    A["Original Ethernet + IP packet"] --> B["VTEP1: classify ingress port"]
+    B --> C["Select tenant VNI"]
+    C --> D["Add outer Ethernet, IPv4, UDP and VXLAN headers"]
+    D --> E["Underlay forwards UDP/4789"]
+    E --> F["VTEP2: parse VXLAN headers"]
+    F --> G{"Exact VNI + inner destination match?"}
+    G -- Yes --> H["Remove outer tunnel headers"]
+    H --> I["Forward inner packet to configured tenant port"]
+    G -- No --> J["Drop packet"]

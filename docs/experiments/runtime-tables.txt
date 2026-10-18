@@ -1,0 +1,33 @@
+P4 VXLAN runtime table evidence
+Source: simple_switch_CLI table_dump output captured during the Mininet session.
+Software model: BMv2 simple_switch.
+Thrift port 9090: VTEP1
+Thrift port 9091: VTEP2
+
+VTEP1 encapsulation:
+  ingress port 1 -> VNI 1001, outer source 10.0.0.1,
+                    outer destination 10.0.0.2, output port 3
+  ingress port 2 -> VNI 1002, outer source 10.0.0.1,
+                    outer destination 10.0.0.2, output port 3
+  default action: drop_packet
+
+VTEP1 decapsulation:
+  VNI 1001 + inner destination 192.168.10.1 -> output port 1
+  VNI 1002 + inner destination 192.168.20.1 -> output port 2
+  default action: drop_packet
+
+VTEP2 encapsulation:
+  ingress port 1 -> VNI 1001, outer source 10.0.0.2,
+                    outer destination 10.0.0.1, output port 3
+  ingress port 2 -> VNI 1002, outer source 10.0.0.2,
+                    outer destination 10.0.0.1, output port 3
+  default action: drop_packet
+
+VTEP2 decapsulation:
+  VNI 1001 + inner destination 192.168.10.2 -> output port 1
+  VNI 1002 + inner destination 192.168.20.2 -> output port 2
+  default action: drop_packet
+
+Interpretation:
+Unmatched VNI/destination pairs select the configured default drop action.
+This record transcribes the observed CLI output; it is not a newly executed capture.
