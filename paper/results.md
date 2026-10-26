@@ -93,3 +93,21 @@ this conclusion.
 These RTT measurements are a separate test run and should not be
 combined with the earlier connectivity measurements as if they were
 repeated measurements under a controlled statistical protocol.
+
+
+## 6. Repeated campaign status (27 October 2026)
+
+A repeated-campaign runner and raw-trial analyzer have been added on the
+`mam-corrections-repeatable-benchmarks` branch. The runner is configured
+for six separate TCP MSS conditions (500, 700, 900, 1100, 1300 and 1400
+bytes), with ten recorded 30-second runs per tenant/condition after one
+excluded warm-up. It writes new rows to `results/repeated_trials.csv`
+only when run inside the configured Ubuntu/WSL2 environment.
+
+**These repeated campaign trials have not been run as part of this code
+change.** The earlier values above remain historical observations. The
+new script and analyzer do not add any result numbers to this document.
+After execution, summarize the new raw rows with
+`python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv`
+and insert the measured summaries and confidence intervals here, keeping
+the baseline and each MSS/payload condition separate.
