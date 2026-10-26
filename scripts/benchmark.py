@@ -1,182 +1,156 @@
 #!/usr/bin/env python3
-import os
-import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import sys
-import csv
-import json
-import time
-import re
-import statistics
+"""Repeat per-tenant TCP throughput and ping measurements on the P4 VXLAN testbed.
 
+Run from repository root inside the configured Ubuntu/WSL2 environment:
+  sudo python3 scripts/benchmark.py --trials 10 --duration 30 --mss 1000
+
+The topology and its hosts live in this Python process. This records only actual
+measurements from Mininet/BMv2. It does not implement the no-VXLAN baseline,
+crafted VNI spoofing, or scale sweep yet.
+"""
+import argparse, csv, json, os, re, subprocess, sys, time, uuid
+from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from mininet.net import Mininet
-from mininet.node import OVSSwitch
 from mininet.log import setLogLevel
-
 from topology.vxlan_topology import VXLANTopo, JSON, add_rules
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MEASUREMENTS = os.path.join(ROOT, "results", "measurements.csv")
-RUNLOG = os.path.join(ROOT, "results", "run-log.csv")
-CAPTURE = "/tmp/vxlan-cross-tenant-capture.txt"
-
+ROOT = Path(__file__).resolve().parents[1]
+RESULTS = ROOT / "results"
+RAW = RESULTS / "repeated_trials.csv"
 
 def ping_stats(host, destination, count=10):
-    output = host.cmd("ping -c %d -W 1 %s" % (count, destination))
+    output = host.cmd(f"ping -c {count} -W 1 {destination}")
     loss = re.search(r"(\d+(?:\.\d+)?)% packet loss", output)
-    rtt = re.search(r"= [\d.]+/([\d.]+)/", output)
+    rtt = re.search(r"=\s*[\d.]+/([\d.]+)/", output)
     if not loss:
-        raise RuntimeError("Could not parse ping output:\n" + output)
-    return float(rtt.group(1)) if rtt else None, float(loss.group(1))
+        raise RuntimeError("Could not parse ping output:\n" + output[-1500:])
+    return (float(rtt.group(1)) if rtt else None, float(loss.group(1)), output)
 
-
-def throughput(client, destination, duration):
-    output = client.cmd(
-        "iperf3 -c %s -t %d -J" % (destination, duration)
-    )
+def iperf_result(client, destination, duration, mss):
+    command = ["iperf3", "-c", destination, "-t", str(duration), "-J", "-M", str(mss)]
+    output = client.cmd(" ".join(command))
     try:
-        data = json.loads(output)
-        return data["end"]["sum_received"]["bits_per_second"] / 1_000_000
-    except (ValueError, KeyError, TypeError):
-        raise RuntimeError("Could not parse iperf3 output:\n" + output[-1500:])
+        obj = json.loads(output)
+        end = obj["end"]
+        sent = end.get("sum_sent", {})
+        received = end.get("sum_received") or end.get("sum")
+        if not received:
+            raise KeyError("end.sum_received")
+        return {
+            "sender_mbps": float(sent["bits_per_second"]) / 1e6 if sent.get("bits_per_second") else "",
+            "receiver_mbps": float(received["bits_per_second"]) / 1e6,
+            "retransmissions": sent.get("retransmits", ""),
+            "command": " ".join(command),
+            "json": output,
+        }
+    except (ValueError, KeyError, TypeError) as exc:
+        raise RuntimeError(f"Unable to parse iperf3 result ({exc}):\n{output[-2000:]}") from exc
 
+def write_row(row):
+    fields = ["experiment_id","timestamp_utc","git_commit","configuration","tenant","transport",
+              "mss_bytes","payload_bytes","duration_seconds","mtu","offload","sender_mbps",
+              "receiver_mbps","retransmissions","latency_ms","packet_loss_percent","status",
+              "command","notes"]
+    create_header = not RAW.exists() or RAW.stat().st_size == 0
+    with RAW.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
+        if create_header:
+            writer.writeheader()
+        writer.writerow(row)
+        f.flush()
+        os.fsync(f.fileno())
 
 def main():
-    trials = int(sys.argv[1]) if len(sys.argv) > 1 else 3
-    duration = int(sys.argv[2]) if len(sys.argv) > 2 else 5
-
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--trials", type=int, default=10)
+    p.add_argument("--duration", type=int, default=30)
+    p.add_argument("--mss", type=int, default=1000)
+    p.add_argument("--tenant", choices=["A","B","both"], default="both")
+    p.add_argument("--warmup", type=int, default=1)
+    args = p.parse_args()
+    if args.trials < 2 or args.duration < 30:
+        p.error("Use at least 2 trials and 30 seconds per trial; recommended 10 x 30 seconds.")
+    if not 500 <= args.mss <= 9000:
+        p.error("MSS must be between 500 and 9000 bytes.")
     if os.geteuid() != 0:
-        sys.exit("Run with sudo: sudo python3 scripts/benchmark.py")
+        p.error("Run with sudo: sudo python3 scripts/benchmark.py --trials 10 --duration 30")
     if not os.path.isfile(JSON):
-        sys.exit("Compiled P4 JSON missing: " + JSON)
+        p.error("Compiled P4 JSON missing: " + JSON)
 
-    os.makedirs(os.path.dirname(MEASUREMENTS), exist_ok=True)
+    RESULTS.mkdir(exist_ok=True)
+    exp_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
+    commit = subprocess.run(["git","rev-parse","HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     net = Mininet(topo=VXLANTopo(), controller=None, autoSetMacs=False)
-
     try:
-        print("Starting P4 VXLAN multi-tenant benchmark...")
+        print(f"Starting P4 VXLAN topology; experiment={exp_id}")
         net.start()
-
         v1, v2 = net.get("vtep1"), net.get("vtep2")
         v1.cmd("ip link set dev vtep1-eth3 address 02:00:00:00:01:01")
         v2.cmd("ip link set dev vtep2-eth3 address 02:00:00:00:01:02")
-
-        hosts = {name: net.get(name) for name in ("h1", "h2", "h3", "h4")}
-        # Leave room for VXLAN encapsulation on every endpoint.
+        hosts = {name: net.get(name) for name in ("h1","h2","h3","h4")}
         for name, host in hosts.items():
-            host.cmd("ip link set dev %s-eth0 mtu 1450" % name)
+            host.cmd(f"ip link set dev {name}-eth0 mtu 1450")
+            host.cmd(f"ethtool -K {name}-eth0 tx off 2>/dev/null || true")
         neighbors = [
-            ("h1", "192.168.10.2", "00:00:00:00:10:02"),
-            ("h2", "192.168.10.1", "00:00:00:00:10:01"),
-            ("h3", "192.168.20.2", "00:00:00:00:20:02"),
-            ("h4", "192.168.20.1", "00:00:00:00:20:01"),
-        ]
+            ("h1","192.168.10.2","00:00:00:00:10:02"), ("h2","192.168.10.1","00:00:00:00:10:01"),
+            ("h3","192.168.20.2","00:00:00:00:20:02"), ("h4","192.168.20.1","00:00:00:00:20:01")]
         for name, ip, mac in neighbors:
-            hosts[name].cmd(
-                "ip neigh replace %s lladdr %s nud permanent dev %s-eth0"
-                % (ip, mac, name)
-            )
-
+            hosts[name].cmd(f"ip neigh replace {ip} lladdr {mac} nud permanent dev {name}-eth0")
         add_rules()
 
-        hosts["h2"].cmd("iperf3 -s > /tmp/iperf3-h2.log 2>&1 &")
-        hosts["h4"].cmd("iperf3 -s > /tmp/iperf3-h4.log 2>&1 &")
-        time.sleep(1)
+        # Confirm the permitted paths before measuring them.
+        for src, dst in (("h1","192.168.10.2"),("h3","192.168.20.2")):
+            _, loss, output = ping_stats(hosts[src], dst, count=3)
+            if loss != 0:
+                raise RuntimeError(f"Positive control failed before benchmark: {src}->{dst}\n{output}")
 
-        # Force cross-subnet packets to be sent for the isolation test.
-        hosts["h1"].cmd("ip route replace 192.168.20.0/24 dev h1-eth0")
-        hosts["h1"].cmd(
-            "ip neigh replace 192.168.20.2 lladdr 00:00:00:00:20:02 "
-            "nud permanent dev h1-eth0"
-        )
+        pairs = [("A","h1","h2","192.168.10.2"), ("B","h3","h4","192.168.20.2")]
+        if args.tenant != "both":
+            pairs = [pair for pair in pairs if pair[0] == args.tenant]
 
-        measurement_exists = os.path.exists(MEASUREMENTS)
-        runlog_exists = os.path.exists(RUNLOG)
-
-        with open(MEASUREMENTS, "a", newline="") as mf, \
-             open(RUNLOG, "a", newline="") as lf:
-            mw = csv.writer(mf)
-            lw = csv.writer(lf)
-
-            if not measurement_exists or os.path.getsize(MEASUREMENTS) == 0:
-                mw.writerow([
-                    "configuration", "trial", "throughput_mbps",
-                    "latency_ms", "packet_loss_percent", "overhead_bytes",
-                    "unauthorized_packets_delivered"
-                ])
-            if not runlog_exists or os.path.getsize(RUNLOG) == 0:
-                lw.writerow([
-                    "date", "configuration", "trial", "packet_size_bytes",
-                    "offered_rate_mbps", "duration_seconds", "iperf3_command",
-                    "ping_command", "notes"
-                ])
-
-            for trial in range(1, trials + 1):
-                print("\nTrial %d/%d" % (trial, trials))
-
-                # Measure each tenant's permitted path.
-                t_a = throughput(hosts["h1"], "192.168.10.2", duration)
-                t_b = throughput(hosts["h3"], "192.168.20.2", duration)
-                lat_a, loss_a = ping_stats(hosts["h1"], "192.168.10.2")
-                lat_b, loss_b = ping_stats(hosts["h3"], "192.168.20.2")
-
-                # Capture on the destination host to count any unauthorized
-                # ICMP echo requests actually delivered to Tenant B.
-                hosts["h4"].cmd("rm -f " + CAPTURE)
-                hosts["h4"].cmd(
-                    "timeout 6 tcpdump -n -l -i h4-eth0 "
-                    "'icmp and src host 192.168.10.1' > "
-                    + CAPTURE + " 2>&1 &"
-                )
-                time.sleep(1)
-                cross_output = hosts["h1"].cmd(
-                    "ping -c 3 -W 1 192.168.20.2"
-                )
-                time.sleep(1)
-                capture = hosts["h4"].cmd("cat " + CAPTURE)
-                delivered = sum(
-                    1 for line in capture.splitlines()
-                    if "ICMP echo request" in line
-                    and "192.168.10.1" in line
-                )
-
-                avg_throughput = (t_a + t_b) / 2
-                valid_latencies = [x for x in (lat_a, lat_b) if x is not None]
-                avg_latency = statistics.mean(valid_latencies) if valid_latencies else ""
-                avg_loss = (loss_a + loss_b) / 2
-
-                mw.writerow([
-                    "C-multitenant-vxlan", trial,
-                    round(avg_throughput, 4), avg_latency,
-                    round(avg_loss, 2), 50, delivered
-                ])
-                mf.flush()
-
-                lw.writerow([
-                    time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "C-multitenant-vxlan", trial, 1500, "",
-                    duration,
-                    "iperf3 -c <tenant-peer> -t %d -J" % duration,
-                    "ping -c 10 <tenant-peer>",
-                    "Tenant A throughput=%.4f Mbps; Tenant B throughput=%.4f Mbps; "
-                    "cross-test replies=%d; captured unauthorized echo requests=%d"
-                    % (t_a, t_b,
-                       cross_output.count("bytes from"), delivered)
-                ])
-                lf.flush()
-
-                print("Tenant A throughput: %.3f Mbps" % t_a)
-                print("Tenant B throughput: %.3f Mbps" % t_b)
-                print("Average latency: %s ms" % avg_latency)
-                print("Average allowed-path packet loss: %.2f%%" % avg_loss)
-                print("Unauthorized echo requests observed at h4: %d" % delivered)
-
-        print("\nMeasurements appended to:")
-        print(MEASUREMENTS)
-        print(RUNLOG)
+        for tenant, client_name, server_name, destination in pairs:
+            client, server = hosts[client_name], hosts[server_name]
+            for number in range(1, args.warmup + args.trials + 1):
+                measured = number > args.warmup
+                label = f"{number-args.warmup}/{args.trials}" if measured else "warm-up"
+                try:
+                    # Keep all namespace interaction in the process owning Mininet.
+                    server.cmd("pkill -x iperf3 2>/dev/null || true")
+                    server.cmd("iperf3 -s -1 > /tmp/iperf3-server.log 2>&1 &")
+                    time.sleep(0.8)
+                    # Fail quickly with server evidence rather than recording a
+                    # mysterious client connection error if startup failed.
+                    if "iperf3" not in server.cmd("pgrep -a iperf3 || true"):
+                        raise RuntimeError("iperf3 server did not start: " +
+                                           server.cmd("cat /tmp/iperf3-server.log 2>/dev/null"))
+                    result = iperf_result(client, destination, args.duration, args.mss)
+                    latency, loss, _ = ping_stats(client, destination, count=10)
+                    print(f"Tenant {tenant} trial {label}: rx={result['receiver_mbps']:.3f} Mbps, RTT={latency}, loss={loss}%")
+                    if measured:
+                        write_row(dict(
+                            experiment_id=exp_id, timestamp_utc=datetime.now(timezone.utc).isoformat(),
+                            git_commit=commit, configuration="P4_VXLAN", tenant=tenant, transport="TCP",
+                            mss_bytes=args.mss, payload_bytes="", duration_seconds=args.duration, mtu=1450,
+                            offload="tx_off", sender_mbps=result["sender_mbps"],
+                            receiver_mbps=result["receiver_mbps"], retransmissions=result["retransmissions"],
+                            latency_ms=latency, packet_loss_percent=loss, status="success",
+                            command=result["command"], notes=""))
+                except Exception as exc:
+                    print(f"Tenant {tenant} trial {label} failed: {exc}", file=sys.stderr)
+                    if measured:
+                        write_row(dict(
+                            experiment_id=exp_id, timestamp_utc=datetime.now(timezone.utc).isoformat(),
+                            git_commit=commit, configuration="P4_VXLAN", tenant=tenant, transport="TCP",
+                            mss_bytes=args.mss, payload_bytes="", duration_seconds=args.duration, mtu=1450,
+                            offload="tx_off", status="failed", command="iperf3 plus ping",
+                            notes=str(exc)[:1200]))
+        print(f"Raw trial results appended to {RAW}")
+        print("Summary: python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv")
     finally:
         net.stop()
-
 
 if __name__ == "__main__":
     setLogLevel("warning")
