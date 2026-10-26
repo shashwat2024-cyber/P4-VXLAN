@@ -43,13 +43,13 @@ The repository contains historical measurements for short same-tenant ping/iperf
 Mam's correction sheet asks for a VXLAN-free baseline, at least 10 x 30-second runs per condition, an MSS/payload sweep, direct crafted-packet isolation tests, scale testing, and clear checksum handling. These items are not claimed complete until raw outputs from the actual BMv2/Mininet environment have been saved.
 
 ## Run and analyse
-Run the environment preflight inside the target system:
+Run the repeated MSS campaign inside the target system:
 
 ```bash
-sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30
+sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400
 ```
 
-This preflight records tool versions and checks tool availability; it does not run network traffic. The existing scripts/benchmark.py starts and stops Mininet within its own process, so a correct repeated-run harness must keep host objects and switch processes alive while each condition is executed. Do not start multiple independent processes and assume they share Mininet Host objects.
+This script records tool versions, then runs each MSS condition through a child process that owns its own Mininet topology. It writes actual per-tenant, per-trial observations to the raw CSV. Use `--preflight-only` to check the environment without sending traffic. The campaign currently measures the P4 VXLAN path only; it does not run the no-VXLAN baseline, UDP payload sweep, spoofing tests, or scale experiment.
 
 Once actual per-trial records are saved in the schema documented at results/REPEATED_TRIALS_SCHEMA.md, summarize them:
 
