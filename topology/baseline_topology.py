@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Mininet topology for the no-VXLAN P4 forwarding baseline.
+"""Mininet topology for a plain-L2 P4 forwarding baseline without VXLAN.
 
-The switch port layout matches topology/vxlan_topology.py: ports 1 and 2 are
-tenant-facing, port 3 connects to the shared OVS underlay. This baseline is
-plain L2 forwarding and deliberately does not claim tenant isolation.
+There are two tenant-facing ports on each P4 switch and port 3 leads to the
+shared OVS underlay. Ethernet destination MAC determines the egress port on
+underlay ingress. This is a performance baseline, not an isolation design.
 """
 import os
 import subprocess
