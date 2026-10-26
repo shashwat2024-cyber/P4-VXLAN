@@ -1,58 +1,52 @@
-# Correction plan: baseline, repetition, checksum handling, and isolation tests
+# First-level corrections: baseline, repetitions, checksum handling and isolation
 
-This document translates the first-level correction sheet into testable work. The numbers in the current report are historical observations, not new trial results.
+This plan follows the correction sheet supplied for Team 12. It distinguishes repository changes from live network experiments: no measurement should be described as completed until the actual BMv2/Mininet environment produces a raw result file.
 
-## What the correction requires
+## Status of this branch
 
-1. **Baseline and repeatability:** compare baseline forwarding without VXLAN against the P4 VXLAN path with the same hosts, MTU, traffic settings, and test duration. Run at least 10 independent 30-second trials per condition and report mean, sample standard deviation, and a 95% confidence interval.
-2. **MSS and payload sweep:** test TCP MSS values 500, 700, 900, 1100, 1300, and 1400 bytes as separate conditions. If also measuring UDP application payload sizes, record them as a separate UDP experiment (not as TCP MSS).
-3. **Isolation misuse tests:** craft packets with Scapy for the correct VNI, wrong VNI, spoofed VNI, and wrong inner destination; observe the receiving tenant-facing interface and packet counters. Save the packet capture and exact command/output for each test.
-4. **Scale:** extend the topology to at least eight tenants and measure packet-processing cost alongside table size. Use 3–4 VTEPs only after the two-VTEP experiment remains correct.
-5. **Mechanisms:** explain that BMv2 does not behave like a NIC that repairs checksum offload on behalf of the P4 program. Recompute outer IPv4 checksum in P4 and validate inner IPv4/UDP checksum behaviour separately. Do not describe endpoint offload changes as a substitute for correct protocol checksum handling.
-6. **Manuscript:** remove course-only manuscript headers, replace terminal screenshots with clean tables, improve related work with actual P4 tunnel/overlay implementations, and describe the limitations precisely.
+- **Added:** per-tenant raw trial logging for the P4 VXLAN path in scripts/benchmark.py, configurable trial count/duration/MSS, warm-up exclusion, per-condition summary statistics, toolchain preflight, raw schema and experiment guidance.
+- **Not run in this environment:** live P4 compilation, Mininet/BMv2 traffic generation, repeated throughput trials, baseline trials, Scapy packet injection and multi-VTEP scaling. This execution environment does not have p4c, simple_switch, Mininet or iperf3 installed and cannot run your WSL2 namespaces.
+- **Not yet implemented:** a matched no-VXLAN baseline topology, six-value MSS sweep automation, UDP payload sweep automation, Scapy VNI-spoof/wrong-destination tests, per-VNI counters, and an 8-tenant/3–4-VTEP topology. These remain necessary to call the whole correction sheet complete.
 
-## Important current-code observation
+## 1. Baseline and repeated trials
 
-The current `src/p4/vxlan.p4` implements an outer IPv4 `update_checksum` in `MyComputeChecksum`. It sets the outer UDP checksum to zero. The encapsulation action transfers the original Ethernet and IPv4 headers into the inner headers; the decapsulation action restores the inner headers. This file does not recompute an inner IPv4 checksum. The appropriate fix must be validated against supported packet types and the P4 v1model target before making broad correctness claims.
+Mam asks for a forwarding baseline without VXLAN and at least 10 runs of 30 seconds per condition. The existing benchmark script now records individual tenant A/B rows rather than averaging the two tenants together, saves failures separately, and excludes a warm-up from recorded samples.
 
-A TCP MSS sweep should not be represented as a payload-size sweep: they influence different layers. Run conditions separately and include the actual iperf3 command/configuration in the raw CSV.
+The baseline must be a **real matched data path** on the same Mininet topology with the same sender/receiver pair, MTU, offered load, transport, duration and offload settings. Do not compare a Linux/OVS baseline to the VXLAN path unless you clearly describe the difference in switching implementation. Run at least ten trials in each condition and compute mean, sample standard deviation and a two-sided 95% Student-t confidence interval. Alternate the order of conditions or use a recorded random seed to reduce order effects.
 
-## Trial design and reporting
-
-- Perform a warm-up run and do not include it in the ten recorded trials.
-- Alternate condition order or use a seeded, recorded order to reduce time/order bias.
-- Preserve raw per-trial records. Never overwrite old observations; add an experiment ID, git commit, timestamp, tenant, transport, MSS/payload, duration, MTU, offload settings, sender and receiver throughput, retransmissions/loss, and exit status.
-- Summarise each condition separately. Do not pool old 5-second and 10-second MTU 1450 runs with the 3-second MSS-1000 diagnostics.
-- Compute a two-sided 95% Student-t confidence interval from independent trial values. A single trial cannot provide a meaningful sample standard deviation or confidence interval.
-- Report the results as BMv2/Mininet/WSL2 performance, not physical switching performance.
-
-## Commands for environment preflight
-
-From Ubuntu/WSL2 in the repository root:
-
+Current run command, inside Ubuntu/WSL2 after compiling the P4 program:
 ```bash
-p4c --version
-simple_switch --version
-mn --version
-python3 --version
-iperf3 --version
-sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30
+sudo python3 scripts/benchmark.py --trials 10 --duration 30 --mss 1000
+python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv
 ```
+Run the command once per MSS condition after the matched topology harness supports sweeping the parameter, or use the CLI's `--mss` option in separate campaigns. The present script currently executes the given single MSS in one campaign; it does not automatically run the whole sweep or a no-VXLAN baseline.
 
-The current preflight script only records environment information and confirms tool availability. It intentionally does not write synthetic benchmark values. Full trials must run while the Mininet host objects and BMv2 topology are alive; a separate Python process cannot access process-local Mininet Host objects without a designed controller or wrapper.
+## 2. MSS and payload sweeps
 
-## Isolation evidence standard
+Keep the TCP MSS sweep and UDP payload-size sweep separate. Suggested TCP MSS values: 500, 700, 900, 1100, 1300 and 1400 bytes, as six independent conditions with ten 30-second trials each. Confirm the negotiated MSS in a capture or iperf output; an endpoint command-line option alone is not evidence that every connection used the requested value. For UDP, specify an application datagram size, bandwidth, duration, receiver throughput, packet loss and jitter. Do not call the UDP datagram size a TCP MSS.
 
-A failed ping is an end-to-end observation, not proof of which table action dropped a packet. For every crafted frame test, retain:
+The current interface supports one TCP MSS per invocation. Repeat it for each requested value and do not pool rows across different MSS values.
 
-- packet construction parameters (source host/interface, VNI, inner source/destination, protocol);
-- ingress/egress PCAPs where possible;
-- per-VNI/per-port counters before and after the trial;
-- whether the correct same-tenant control succeeded in the same run;
-- complete raw output, timestamp, and configuration/commit ID.
+## 3. Isolation tests against misuse
 
-A test should distinguish *not delivered at the endpoint* from *confirmed dropped by the intended P4 table*. State which one was actually observed.
+Ping failure is an end-to-end non-delivery result; it does not, by itself, prove which forwarding-table action dropped a packet. Next tests should craft VXLAN packets with Scapy, including a valid VNI, Tenant A source with Tenant B VNI, Tenant B VNI with an incorrect inner destination, unknown VNI, and malformed/unsupported header cases. Capture at the underlay and tenant-facing egress. Read counter snapshots before and after each test where BMv2 registers or table counters are added. Keep a same-tenant positive control in each campaign.
 
-## Work that can be done outside the WSL2 network runtime
+Report separately whether the packet was not delivered at the endpoint and whether the intended table-drop/counter change was directly observed. The current topology uses exact-match decapsulation on VNI plus inner IPv4 destination and a default drop action, but crafted input and counter evidence are still outstanding.
 
-Analysis scripts, documentation, report structure, and configuration checks can be prepared in any Python environment. Actual throughput, latency, Scapy injection, CPU/packet-rate measurements, and multi-VTEP behaviour require the configured BMv2/Mininet environment and must be run there. Do not invent or extrapolate those observations.
+## 4. Scale experiments
+
+After the two-tenant implementation is stable, add at least eight tenants and three or four VTEPs. Report table size, number of entries, throughput, packet rate or CPU cost, latency, failures and topology details. Test correctness after increasing scale; do not infer scale performance from the two-tenant data.
+
+## 5. Checksum and encapsulation explanation
+
+The current `src/p4/vxlan.p4` has an outer IPv4 checksum update in `MyComputeChecksum` and sets the outer UDP checksum field to zero during encapsulation. The original IPv4 header is copied to the inner header and restored on decapsulation. The source does not recompute the inner IPv4 checksum. Checksum handling and support for UDP/TCP inner traffic should be validated explicitly against the P4 v1model/BMv2 target. Endpoint TX checksum offload changes can help diagnose a software-testbed artefact, but they should not replace correct P4 protocol checksum handling.
+
+VXLAN adds 50 bytes of encapsulation headers in this implementation (outer Ethernet 14 + IPv4 20 + UDP 8 + VXLAN 8). Explain this as header overhead; measured throughput differences also depend on per-packet processing and the host/WSL2 virtual network, so they cannot be attributed to the VXLAN header alone without the baseline.
+
+## 6. Manuscript changes
+
+For the next revision: remove course-only headers and the “Prepared October 2026” line; replace console screenshots with clean, concise result tables; expand related work to discuss actual P4 tunnel/overlay implementations rather than treating foundational P4 language papers as having limitations; report every run condition and uncertainty; clearly qualify the isolation evidence; and avoid journal-level claims until the missing experiments are complete.
+
+## Data handling
+
+The raw CSV schema is documented in `results/REPEATED_TRIALS_SCHEMA.md`. Keep historical results unchanged and preserve failed attempts with a failure status/reason. The analyzer only includes successful numeric receiver-throughput values and keeps conditions with different MSS, duration, tenant, configuration, MTU, transport or offload setting separate. It writes intervals only when there are at least two observations. No fabricated or projected trial results should be added.
