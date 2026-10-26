@@ -6,20 +6,20 @@ This plan follows the correction sheet supplied for Team 12. It distinguishes re
 
 - **Added:** per-tenant raw trial logging for the P4 VXLAN path in scripts/benchmark.py, configurable trial count/duration/MSS, warm-up exclusion, per-condition summary statistics, a campaign orchestrator for the six TCP MSS values, tool-version recording, raw schema and experiment guidance.
 - **Not run in this environment:** live P4 compilation, Mininet/BMv2 traffic generation, repeated throughput trials, baseline trials, Scapy packet injection and multi-VTEP scaling. This execution environment does not have p4c, simple_switch, Mininet or iperf3 installed and cannot run your WSL2 namespaces.
-- **Not yet implemented:** a matched no-VXLAN baseline topology, MSS campaign automation for six TCP values, UDP payload sweep automation, Scapy VNI-spoof/wrong-destination tests, per-VNI counters, and an 8-tenant/3–4-VTEP topology. These remain necessary to call the whole correction sheet complete.
+- **Not yet implemented:** a matched no-VXLAN baseline topology, MSS campaign automation for six TCP values and a plain-L2 baseline option, UDP payload sweep automation, Scapy VNI-spoof/wrong-destination tests, per-VNI counters, and an 8-tenant/3–4-VTEP topology. These remain necessary to call the whole correction sheet complete.
 
 ## 1. Baseline and repeated trials
 
 Mam asks for a forwarding baseline without VXLAN and at least 10 runs of 30 seconds per condition. The existing benchmark script now records individual tenant A/B rows rather than averaging the two tenants together, saves failures separately, and excludes a warm-up from recorded samples.
 
-The baseline must be a **real matched data path** on the same Mininet topology with the same sender/receiver pair, MTU, offered load, transport, duration and offload settings. Do not compare a Linux/OVS baseline to the VXLAN path unless you clearly describe the difference in switching implementation. Run at least ten trials in each condition and compute mean, sample standard deviation and a two-sided 95% Student-t confidence interval. Alternate the order of conditions or use a recorded random seed to reduce order effects.
+The baseline is implemented as plain L2 forwarding in a P4 program with a topology matching the same host and switch layout. It keeps the same sender/receiver pair, MTU, TCP MSS, duration and offload settings, but uses a different forwarding mechanism (no VXLAN); describe this as a baseline configuration, not an isolated control. Run at least ten trials in each condition and compute mean, sample standard deviation and a two-sided 95% Student-t confidence interval. The orchestrator alternates condition order across MSS values.
 
 Current run command, inside Ubuntu/WSL2 after compiling the P4 program:
 ```bash
 sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400
 python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv
 ```
-The campaign orchestrator now launches one Mininet-owned benchmark for each MSS setting, appending each condition to the same raw CSV. This campaign still measures only the existing VXLAN path; the no-VXLAN baseline is not yet implemented.
+The orchestrator launches a Mininet-owned benchmark for each MSS setting, appending both conditions to the same raw CSV when `--with-baseline` is used. Compile `src/p4/baseline.p4` to `build/baseline.json` first. The baseline is present in code but has not been runtime-validated here.
 
 ## 2. MSS and payload sweeps
 
