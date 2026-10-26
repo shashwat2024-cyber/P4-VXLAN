@@ -4,7 +4,7 @@ This plan follows the correction sheet supplied for Team 12. It distinguishes re
 
 ## Status of this branch
 
-- **Added:** per-tenant raw trial logging for the P4 VXLAN path in scripts/benchmark.py, configurable trial count/duration/MSS, warm-up exclusion, per-condition summary statistics, toolchain preflight, raw schema and experiment guidance.
+- **Added:** per-tenant raw trial logging for the P4 VXLAN path in scripts/benchmark.py, configurable trial count/duration/MSS, warm-up exclusion, per-condition summary statistics, a campaign orchestrator for the six TCP MSS values, tool-version recording, raw schema and experiment guidance.
 - **Not run in this environment:** live P4 compilation, Mininet/BMv2 traffic generation, repeated throughput trials, baseline trials, Scapy packet injection and multi-VTEP scaling. This execution environment does not have p4c, simple_switch, Mininet or iperf3 installed and cannot run your WSL2 namespaces.
 - **Not yet implemented:** a matched no-VXLAN baseline topology, six-value MSS sweep automation, UDP payload sweep automation, Scapy VNI-spoof/wrong-destination tests, per-VNI counters, and an 8-tenant/3–4-VTEP topology. These remain necessary to call the whole correction sheet complete.
 
@@ -16,10 +16,10 @@ The baseline must be a **real matched data path** on the same Mininet topology w
 
 Current run command, inside Ubuntu/WSL2 after compiling the P4 program:
 ```bash
-sudo python3 scripts/benchmark.py --trials 10 --duration 30 --mss 1000
+sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400
 python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv
 ```
-Run the command once per MSS condition after the matched topology harness supports sweeping the parameter, or use the CLI's `--mss` option in separate campaigns. The present script currently executes the given single MSS in one campaign; it does not automatically run the whole sweep or a no-VXLAN baseline.
+The campaign orchestrator now launches one Mininet-owned benchmark for each MSS setting, appending each condition to the same raw CSV. This campaign still measures only the existing VXLAN path; the no-VXLAN baseline is not yet implemented.
 
 ## 2. MSS and payload sweeps
 
@@ -39,7 +39,7 @@ After the two-tenant implementation is stable, add at least eight tenants and th
 
 ## 5. Checksum and encapsulation explanation
 
-The current `src/p4/vxlan.p4` has an outer IPv4 checksum update in `MyComputeChecksum` and sets the outer UDP checksum field to zero during encapsulation. The original IPv4 header is copied to the inner header and restored on decapsulation. The source does not recompute the inner IPv4 checksum. Checksum handling and support for UDP/TCP inner traffic should be validated explicitly against the P4 v1model/BMv2 target. Endpoint TX checksum offload changes can help diagnose a software-testbed artefact, but they should not replace correct P4 protocol checksum handling.
+The current `src/p4/vxlan.p4` recomputes the outer IPv4 checksum in `MyComputeChecksum`. During decapsulation, the inner IPv4 header is copied into `hdr.outer_ipv4`; the same checksum control then recalculates that restored IPv4 header before emission. The outer UDP checksum is set to zero, which is permitted for IPv4 UDP; the inner UDP header is preserved rather than modified. Confirm these details with captures and checksum validation for the packets actually tested. Endpoint TX checksum-offload settings are an experimental control to ensure the source host emits valid checksums; they are not a substitute for correct P4 checksum handling.
 
 VXLAN adds 50 bytes of encapsulation headers in this implementation (outer Ethernet 14 + IPv4 20 + UDP 8 + VXLAN 8). Explain this as header overhead; measured throughput differences also depend on per-packet processing and the host/WSL2 virtual network, so they cannot be attributed to the VXLAN header alone without the baseline.
 
@@ -49,4 +49,4 @@ For the next revision: remove course-only headers and the “Prepared October 20
 
 ## Data handling
 
-The raw CSV schema is documented in `results/REPEATED_TRIALS_SCHEMA.md`. Keep historical results unchanged and preserve failed attempts with a failure status/reason. The analyzer only includes successful numeric receiver-throughput values and keeps conditions with different MSS, duration, tenant, configuration, MTU, transport or offload setting separate. It writes intervals only when there are at least two observations. No fabricated or projected trial results should be added.
+The campaign runner measures the requested TCP MSS values in separate runs. The raw CSV schema is documented in `results/REPEATED_TRIALS_SCHEMA.md`. Keep historical results unchanged and preserve failed attempts with a failure status/reason. The analyzer only includes successful numeric receiver-throughput values and keeps conditions with different MSS, duration, tenant, configuration, MTU, transport or offload setting separate. It writes intervals only when there are at least two observations. No fabricated or projected trial results should be added.
