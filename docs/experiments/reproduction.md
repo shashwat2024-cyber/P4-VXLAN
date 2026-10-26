@@ -135,15 +135,25 @@ sudo timeout 12 tcpdump -ni vtep2-eth3 -c 1 -vv 'udp dst port 4789'
 
 If tcpdump reports `unknown payload`, its output does not independently establish the VXLAN VNI or inner destination. Save raw captures if detailed packet-level evidence is required.
 
-## 7. Repeated TCP measurements
+## 7. Repeated baseline and VXLAN TCP measurements
 
-After compiling the P4 program and verifying same-tenant connectivity, run the MSS campaign from a clean repository root:
+Compile both programs, taking care to inspect the build output and normalize the files to the two expected paths (the VXLAN program is already discussed above):
 
 ```bash
-sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400
+mkdir -p build
+p4c --target bmv2 --arch v1model -o build/vxlan.json src/p4/vxlan.p4
+p4c --target bmv2 --arch v1model -o build/baseline.json src/p4/baseline.p4
 ```
 
-This starts a fresh Mininet topology for each MSS condition. It records one row per measured run and tenant in `results/repeated_trials.csv`, excludes the configured warm-up, preserves failed attempts, and writes tool/version metadata to `results/environment.json`. It will not produce values if the toolchain or compiled JSON is missing. Add `--preflight-only` to collect environment information without generating traffic.
+If p4c creates `build/vxlan.json/` or `build/baseline.json/` as directories rather than files, inspect them and carefully move the inner JSON files to `build/vxlan.json` and `build/baseline.json` respectively. Do not delete uninspected build output.
+
+Run the paired repeated MSS campaign from the repository root:
+
+```bash
+sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400 --with-baseline
+```
+
+This starts a fresh Mininet topology for each condition. The runner records each tenant and measured run in `results/repeated_trials.csv`, excludes the warm-up, preserves failed attempts, and writes tool/version metadata to `results/environment.json`. It alternates baseline/VXLAN order across MSS values. The plain-L2 baseline is a performance comparison, not an isolation configuration; it intentionally does not provide VXLAN tenant segmentation. Add `--preflight-only` to collect environment information without generating traffic.
 
 Compute per-condition summaries:
 
@@ -155,6 +165,6 @@ The summary reports mean, sample standard deviation, and a 95% Student-t confide
 
 ## 8. Other required experiments
 
-The campaign above measures only the existing two-tenant VXLAN path. It does **not** implement or execute the no-VXLAN baseline, UDP application-payload sweep, crafted VNI-spoof/wrong-destination tests, or scale-up to eight tenants and multiple VTEPs. These are still required for the correction sheet. See `baseline-and-sweeps.md` for the study design.
+The paired campaign provides the TCP MSS sweep and matched plain-L2 no-VXLAN baseline. UDP application-payload sweep, crafted VNI-spoof/wrong-destination tests with packet/counter evidence, and scale-up to eight tenants and multiple VTEPs are still outstanding. See `baseline-and-sweeps.md` for the study design.
 
 Cross-tenant ping failures and default-drop table configuration are consistent with the intended isolation policy, but are not exhaustive proof against every possible misconfiguration or attack. Record actual command output, tool versions, test conditions, units, and failed trials. Do not invent missing measurements.
