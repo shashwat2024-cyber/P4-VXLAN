@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-"""Orchestrate repeated TCP measurements across the requested MSS values.
+"""Run repeated, controlled throughput trials for P4 VXLAN and a no-VXLAN baseline.
 
-Run from the repository root inside the configured Ubuntu/WSL2 environment:
-  sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30
-  sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400
+From Ubuntu/WSL2 at the repository root:
+  p4c --target bmv2 --arch v1model -o build/vxlan.json src/p4/vxlan.p4
+  p4c --target bmv2 --arch v1model -o build/baseline.json src/p4/baseline.p4
+  sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --with-baseline
 
-The script checks the test environment, records tool versions, then launches the
-process-local Mininet benchmark once per MSS. Each child writes real per-tenant
-measurements into results/repeated_trials.csv. This is only the VXLAN path:
-the matched no-VXLAN baseline, UDP payload sweep, crafted spoofing cases, and
-multi-tenant scale experiment require separate test modes and are not claimed
-to have been measured by this script.
+Each condition runs in a child process that owns its Mininet network. Trials
+are recorded as actual results; no synthetic measurements are generated.
 """
 import argparse
 import json
@@ -23,11 +20,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 ENVIRONMENT = RESULTS / "environment.json"
-BENCHMARK = ROOT / "scripts" / "benchmark.py"
+VXLAN_BENCH = ROOT / "scripts" / "benchmark.py"
+BASELINE_BENCH = ROOT / "scripts" / "baseline_benchmark.py"
 
 def shell(command):
-    p = subprocess.run(["bash", "-lc", command], text=True, capture_output=True)
-    return (p.stdout + p.stderr).strip()
+    result = subprocess.run(["bash", "-lc", command], text=True, capture_output=True)
+    return (result.stdout + result.stderr).strip()
 
 def environment_snapshot():
     return {
@@ -43,17 +41,18 @@ def environment_snapshot():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--trials", type=int, default=10, help="recorded runs per tenant and MSS (default: 10)")
-    parser.add_argument("--duration", type=int, default=30, help="seconds per iperf3 run (default: 30)")
-    parser.add_argument("--mss", type=int, nargs="+", default=[500, 700, 900, 1100, 1300, 1400],
-                        help="TCP MSS values to test as separate conditions")
+    parser.add_argument("--trials", type=int, default=10)
+    parser.add_argument("--duration", type=int, default=30)
+    parser.add_argument("--mss", type=int, nargs="+", default=[500, 700, 900, 1100, 1300, 1400])
     parser.add_argument("--tenant", choices=["A", "B", "both"], default="both")
-    parser.add_argument("--warmup", type=int, default=1, help="excluded warm-up runs per tenant and MSS")
-    parser.add_argument("--preflight-only", action="store_true", help="check tools and record environment without traffic")
+    parser.add_argument("--warmup", type=int, default=1)
+    parser.add_argument("--with-baseline", action="store_true",
+                        help="also run plain L2 P4 baseline for every MSS condition; requires build/baseline.json")
+    parser.add_argument("--preflight-only", action="store_true")
     args = parser.parse_args()
 
     if args.trials < 2 or args.duration < 30:
-        parser.error("Use at least 2 trials and 30 seconds per run; recommended 10 x 30 seconds.")
+        parser.error("Use at least 2 trials and 30 seconds per run.")
     if args.warmup < 0:
         parser.error("--warmup cannot be negative.")
     if not args.mss or any(m < 500 or m > 9000 for m in args.mss):
@@ -66,9 +65,11 @@ def main():
     if missing:
         parser.error("Missing required tools: " + ", ".join(missing))
     if not (ROOT / "build" / "vxlan.json").is_file():
-        parser.error("Missing build/vxlan.json. Compile src/p4/vxlan.p4 as described in docs/experiments/reproduction.md.")
-    if not BENCHMARK.is_file():
-        parser.error(f"Benchmark child script missing: {BENCHMARK}")
+        parser.error("Missing build/vxlan.json; compile src/p4/vxlan.p4 first.")
+    if not VXLAN_BENCH.is_file():
+        parser.error(f"Benchmark child script missing: {VXLAN_BENCH}")
+    if args.with_baseline and not (ROOT / "build" / "baseline.json").is_file():
+        parser.error("--with-baseline requires build/baseline.json; compile src/p4/baseline.p4 first.")
 
     RESULTS.mkdir(exist_ok=True)
     snapshot = environment_snapshot()
@@ -78,30 +79,42 @@ def main():
         "mss_values_bytes": args.mss,
         "tenant_selection": args.tenant,
         "warmup_runs_excluded": args.warmup,
-        "traffic_experiment": "P4_VXLAN only; baseline and security/scale tests are separate",
+        "with_plain_l2_baseline": args.with_baseline,
+        "note": "All trials must run in the configured BMv2/Mininet environment; no data is simulated."
     })
     ENVIRONMENT.write_text(json.dumps(snapshot, indent=2) + "\n", encoding="utf-8")
-    print("Environment metadata recorded in", ENVIRONMENT)
+    print("Environment metadata saved to", ENVIRONMENT)
     if args.preflight_only:
-        print("Preflight only: no traffic trial was run.")
+        print("Preflight only; no traffic trial was run.")
         return 0
 
     overall = 0
-    for mss in args.mss:
-        print(f"\n===== MSS {mss} bytes: {args.trials} recorded trials x {args.duration}s =====", flush=True)
-        command = [
-            sys.executable, str(BENCHMARK), "--trials", str(args.trials),
-            "--duration", str(args.duration), "--mss", str(mss),
-            "--tenant", args.tenant, "--warmup", str(args.warmup),
-        ]
-        result = subprocess.run(command, cwd=ROOT)
-        if result.returncode:
-            overall = result.returncode
-            print(f"Condition MSS={mss} failed at process level; inspect the child output and raw CSV.", file=sys.stderr)
-    print("\nCampaign finished. Some individual trials may be recorded with status=failed.")
-    print("Raw data: results/repeated_trials.csv")
+    for i, mss in enumerate(args.mss):
+        print(f"\n===== MSS {mss} bytes: {args.trials} trials x {args.duration}s =====", flush=True)
+        vxlan_command = [sys.executable, str(VXLAN_BENCH), "--trials", str(args.trials),
+                         "--duration", str(args.duration), "--mss", str(mss),
+                         "--tenant", args.tenant, "--warmup", str(args.warmup)]
+        baseline_command = [sys.executable, str(BASELINE_BENCH), "--trials", str(args.trials),
+                            "--duration", str(args.duration), "--mss", str(mss),
+                            "--tenant", args.tenant, "--warmup", str(args.warmup)]
+        # Alternate order across MSS conditions to reduce systematic order bias.
+        commands = [vxlan_command, baseline_command] if i % 2 == 0 else [baseline_command, vxlan_command]
+        if not args.with_baseline:
+            commands = [vxlan_command]
+        for command in commands:
+            label = "baseline" if str(BASELINE_BENCH) in command else "P4 VXLAN"
+            print(f"--- Running {label} condition ---", flush=True)
+            result = subprocess.run(command, cwd=ROOT)
+            if result.returncode:
+                overall = result.returncode
+                print(f"{label} MSS={mss} campaign had a process-level failure; inspect output and CSV.", file=sys.stderr)
+
+    print("\nCampaign process completed. Individual trial failures may exist in the raw CSV.")
+    print("Raw rows: results/repeated_trials.csv")
     print("Summary: python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv")
-    print("Reminder: this campaign does not provide the no-VXLAN baseline, UDP payload sweep, spoofing tests, or scale results.")
+    if not args.with_baseline:
+        print("Baseline not run; repeat with --with-baseline after compiling build/baseline.json.")
+    print("UDP payload, spoofed-VNI, and 8-tenant/multi-VTEP tests remain separate experiments.")
     return overall
 
 if __name__ == "__main__":
