@@ -17,7 +17,7 @@ Each VTEP performs encapsulation on tenant-facing ingress and decapsulation usin
 | src/p4/vxlan.p4 | P4_16 parsing, encapsulation, decapsulation, and forwarding |
 | topology/vxlan_topology.py | Mininet topology and runtime table entries |
 | scripts/benchmark.py | Process-local Mininet benchmark for one VXLAN MSS condition |
-| scripts/repeated_benchmark.py | Repeated TCP MSS campaign orchestrator and environment metadata capture |
+| scripts/repeated_benchmark.py | Repeated TCP MSS campaign orchestrator; optionally runs the plain-L2 baseline |
 | scripts/analyze_repeated_trials.py | Raw CSV analysis with mean, sample SD, and 95% confidence intervals |
 | docs/experiments/reproduction.md | Toolchain setup, compilation and topology reproduction |
 | docs/experiments/baseline-and-sweeps.md | Mam's baseline, repeatability, checksum, isolation, and scale corrections |
@@ -40,16 +40,18 @@ Compile the P4 program as described in the reproduction guide. Inspect the outpu
 ## Existing evidence versus next experiments
 The repository contains historical measurements for short same-tenant ping/iperf3 tests and cross-tenant probes. Those observations are useful functional checks but are not a substitute for controlled repeated measurements. The current three MSS-1000 diagnostic throughput values (26.9 and 26.2 Mbps for Tenant A; 26.5 Mbps for Tenant B) are historical values, not outputs of the new repeated campaign. Conditions with different duration, MTU, MSS, or endpoint offload settings must be kept separate.
 
-Mam's correction sheet asks for a VXLAN-free baseline, at least 10 x 30-second runs per condition, an MSS/payload sweep, direct crafted-packet isolation tests, scale testing, and clear checksum handling. These items are not claimed complete until raw outputs from the actual BMv2/Mininet environment have been saved.
+Mam's correction sheet asks for a VXLAN-free baseline, at least 10 x 30-second runs per condition, MSS/payload sweeps, direct crafted-packet isolation tests, scale testing, and clear checksum handling. The baseline and TCP MSS campaign code are now present, but no live results are claimed until the actual BMv2/Mininet environment produces raw output.
 
 ## Run and analyse
 Run the repeated MSS campaign inside the target system:
 
 ```bash
-sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400
+p4c --target bmv2 --arch v1model -o build/vxlan.json src/p4/vxlan.p4
+p4c --target bmv2 --arch v1model -o build/baseline.json src/p4/baseline.p4
+sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400 --with-baseline
 ```
 
-This script records tool versions, then runs each MSS condition through a child process that owns its own Mininet topology. It writes actual per-tenant, per-trial observations to the raw CSV. Use `--preflight-only` to check the environment without sending traffic. The campaign currently measures the P4 VXLAN path only; it does not run the no-VXLAN baseline, UDP payload sweep, spoofing tests, or scale experiment.
+This campaign records tool versions, then runs each MSS condition in a child process that owns its own Mininet topology. With `--with-baseline`, it also runs the P4 plain-L2 no-VXLAN baseline in a matching topology and alternates condition order across MSS values. It writes actual per-tenant, per-trial observations to the raw CSV. Use `--preflight-only` to check the environment without sending traffic. UDP payload sweep, spoofing tests, and scale experiment remain separate work.
 
 Once actual per-trial records are saved in the schema documented at results/REPEATED_TRIALS_SCHEMA.md, summarize them:
 
