@@ -120,7 +120,12 @@ def main():
                     # Keep all namespace interaction in the process owning Mininet.
                     server.cmd("pkill -x iperf3 2>/dev/null || true")
                     server.cmd("iperf3 -s -1 > /tmp/iperf3-server.log 2>&1 &")
-                    time.sleep(0.5)
+                    time.sleep(0.8)
+                    # Fail quickly with server evidence rather than recording a
+                    # mysterious client connection error if startup failed.
+                    if "iperf3" not in server.cmd("pgrep -a iperf3 || true"):
+                        raise RuntimeError("iperf3 server did not start: " +
+                                           server.cmd("cat /tmp/iperf3-server.log 2>/dev/null"))
                     result = iperf_result(client, destination, args.duration, args.mss)
                     latency, loss, _ = ping_stats(client, destination, count=10)
                     print(f"Tenant {tenant} trial {label}: rx={result['receiver_mbps']:.3f} Mbps, RTT={latency}, loss={loss}%")
