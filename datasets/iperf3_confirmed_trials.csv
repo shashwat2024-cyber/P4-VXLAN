@@ -1,0 +1,7 @@
+configuration,tenant,direction,duration_seconds,mss_bytes,sender_mbps,receiver_mbps,retransmissions,mtu,status
+VXLAN_TenantA_MTU1450,A,h1-to-h2,5,1460,44.9,36.8,0,1450,success_earlier_trial
+VXLAN_TenantA_MTU1450,A,h1-to-h2,10,1460,42.1,35.8,137,1450,success_with_retransmissions
+VXLAN_TenantA_MTU1450,A,h1-to-h2,10,1460,36.5,34.5,191,1450,success_with_retransmissions
+VXLAN_TenantA_MSS1000,A,h1-to-h2,3,1000,31.4,26.9,0,unknown,success_diagnostic
+VXLAN_TenantA_MSS1000,A,h1-to-h2,3,1000,29.3,26.2,0,unknown,success_diagnostic
+VXLAN_TenantB_MSS1000,B,h3-to-h4,3,1000,30.7,26.5,0,unknown,success_diagnostic
