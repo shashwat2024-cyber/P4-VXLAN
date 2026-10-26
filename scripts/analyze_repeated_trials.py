@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-"""Analyze raw repeated benchmark CSVs without fabricating observations.
+"""Summarize actual per-trial CSV observations.
 
-Usage:
+Example:
   python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv
-Produces results/repeated_summary.csv and a summary text report. Rows marked
-failed are retained in the raw data but excluded from throughput summaries.
+
+No results are generated unless raw records exist. Conditions differing in
+tenant, configuration, transport, MSS, payload, duration, MTU or offload are
+kept in separate groups.
 """
-import argparse, csv, math, statistics
+import argparse
+import csv
+import math
+import statistics
 from pathlib import Path
 
 T95 = {1:12.706,2:4.303,3:3.182,4:2.776,5:2.571,6:2.447,7:2.365,8:2.306,
@@ -14,50 +19,78 @@ T95 = {1:12.706,2:4.303,3:3.182,4:2.776,5:2.571,6:2.447,7:2.365,8:2.306,
        16:2.120,17:2.110,18:2.101,19:2.093,20:2.086,21:2.080,22:2.074,
        23:2.069,24:2.064,25:2.060,26:2.056,27:2.052,28:2.048,29:2.045,30:2.042}
 
-def stats(v):
-    mean = statistics.mean(v)
-    if len(v) < 2:
+def stats(values):
+    mean = statistics.mean(values)
+    if len(values) < 2:
         return mean, None, None, None
-    sd = statistics.stdev(v)
-    half = T95.get(len(v)-1, 1.96) * sd / math.sqrt(len(v))
-    return mean, sd, mean-half, mean+half
+    sd = statistics.stdev(values)
+    critical = T95.get(len(values) - 1, 1.96)
+    half = critical * sd / math.sqrt(len(values))
+    return mean, sd, mean - half, mean + half
 
 def main():
-    p=argparse.ArgumentParser()
-    p.add_argument("csv_file", nargs="?", default="results/repeated_trials.csv")
-    a=p.parse_args()
-    src=Path(a.csv_file)
-    if not src.exists(): p.error(f"Input not found: {src}")
-    with src.open(newline="",encoding="utf-8") as f: rows=list(csv.DictReader(f))
-    grouped={}
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("csv_file", nargs="?", default="results/repeated_trials.csv")
+    args = parser.parse_args()
+    source = Path(args.csv_file)
+    if not source.exists():
+        parser.error(f"Input not found: {source}")
+    with source.open(newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+
+    group_columns = ("experiment_id","configuration","tenant","transport","mss_bytes",
+                     "payload_bytes","duration_seconds","mtu","offload")
+    groups = {}
+    invalid = 0
     for row in rows:
-        if row.get("status") != "success" or not row.get("receiver_mbps"): continue
-        key=tuple(row.get(k,"") for k in ("experiment_id","configuration","tenant","transport","mss_bytes","payload_bytes","duration_seconds","mtu","offload"))
-        grouped.setdefault(key,[]).append(row)
-    out=src.with_name("repeated_summary.csv")
-    cols=["experiment_id","configuration","tenant","transport","mss_bytes","payload_bytes","duration_seconds","mtu","offload","n","mean_receiver_mbps","sd_receiver_mbps","ci95_low_mbps","ci95_high_mbps","mean_latency_ms","mean_packet_loss_percent","mean_retransmissions"]
-    with out.open("w",newline="",encoding="utf-8") as f:
-        w=csv.DictWriter(f,fieldnames=cols);w.writeheader()
-        for key,items in sorted(grouped.items()):
-            vals=[float(r["receiver_mbps"]) for r in items]
-            mean,sd,lo,hi=stats(vals)
-            lats=[float(r["latency_ms"]) for r in items if r.get("latency_ms")]
-            loss=[float(r["packet_loss_percent"]) for r in items if r.get("packet_loss_percent")]
-            retrans=[float(r["retransmissions"]) for r in items if r.get("retransmissions")]
-            d=dict(zip(cols[:9],key));d.update(n=len(vals),mean_receiver_mbps=f"{mean:.4f}",
-              sd_receiver_mbps="" if sd is None else f"{sd:.4f}",
-              ci95_low_mbps="" if lo is None else f"{lo:.4f}",
-              ci95_high_mbps="" if hi is None else f"{hi:.4f}",
-              mean_latency_ms=f"{statistics.mean(lats):.4f}" if lats else "",
-              mean_packet_loss_percent=f"{statistics.mean(loss):.4f}" if loss else "",
-              mean_retransmissions=f"{statistics.mean(retrans):.2f}" if retrans else "")
-            w.writerow(d)
-    print(f"Analysed {len(rows)} raw rows; {sum(len(v) for v in grouped.values())} successful throughput observations.")
-    print(f"Wrote {out}")
-    for key,items in sorted(grouped.items()):
-        vals=[float(r["receiver_mbps"]) for r in items]
-        mean,sd,lo,hi=stats(vals)
-        name=" / ".join(x for x in key[:7] if x)
-        if len(vals)<2: print(f"{name}: n=1; CI unavailable")
-        else: print(f"{name}: n={len(vals)}, mean={mean:.3f} Mbps, SD={sd:.3f}, 95% CI [{lo:.3f}, {hi:.3f}] Mbps")
-if __name__=="__main__": main()
+        if row.get("status") != "success" or not row.get("receiver_mbps"):
+            continue
+        try:
+            value = float(row["receiver_mbps"])
+            if not math.isfinite(value) or value < 0:
+                raise ValueError("receiver throughput must be finite and nonnegative")
+        except (ValueError, TypeError):
+            invalid += 1
+            continue
+        key = tuple(row.get(column, "") for column in group_columns)
+        groups.setdefault(key, []).append(row)
+
+    output = source.with_name("repeated_summary.csv")
+    columns = list(group_columns) + ["n","mean_receiver_mbps","sd_receiver_mbps",
+        "ci95_low_mbps","ci95_high_mbps","mean_latency_ms",
+        "mean_packet_loss_percent","mean_retransmissions"]
+    with output.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=columns)
+        writer.writeheader()
+        for key, items in sorted(groups.items()):
+            values = [float(row["receiver_mbps"]) for row in items]
+            mean, sd, low, high = stats(values)
+            latencies = [float(row["latency_ms"]) for row in items if row.get("latency_ms")]
+            losses = [float(row["packet_loss_percent"]) for row in items if row.get("packet_loss_percent")]
+            retransmits = [float(row["retransmissions"]) for row in items if row.get("retransmissions")]
+            record = dict(zip(group_columns, key))
+            record.update(
+                n=len(values), mean_receiver_mbps=f"{mean:.4f}",
+                sd_receiver_mbps="" if sd is None else f"{sd:.4f}",
+                ci95_low_mbps="" if low is None else f"{low:.4f}",
+                ci95_high_mbps="" if high is None else f"{high:.4f}",
+                mean_latency_ms=f"{statistics.mean(latencies):.4f}" if latencies else "",
+                mean_packet_loss_percent=f"{statistics.mean(losses):.4f}" if losses else "",
+                mean_retransmissions=f"{statistics.mean(retransmits):.2f}" if retransmits else "")
+            writer.writerow(record)
+
+    successes = sum(len(values) for values in groups.values())
+    print(f"Raw rows: {len(rows)}; successful throughput observations analysed: {successes}; malformed numeric rows skipped: {invalid}.")
+    print(f"Summary written to {output}")
+    for key, items in sorted(groups.items()):
+        values = [float(row["receiver_mbps"]) for row in items]
+        mean, sd, low, high = stats(values)
+        label = " / ".join(value for value in key[:7] if value)
+        if sd is None:
+            print(f"{label}: n=1; SD and 95% CI unavailable.")
+        else:
+            print(f"{label}: n={len(values)}, mean={mean:.3f} Mbps, SD={sd:.3f}, "
+                  f"95% CI [{low:.3f}, {high:.3f}] Mbps")
+
+if __name__ == "__main__":
+    main()
