@@ -123,4 +123,3 @@ Tenant-scale connectivity checks passed at 2, 4, 6 and 8 tenants (4/4, 8/8, 12/1
 A separate exploratory CPU campaign used three measured 30-second Tenant A trials per configuration at MSS 1000, MTU 1450 and `tx_off`. Mean receiver throughput was 28.14 Mbps for VXLAN and 71.81 Mbps for plain L2. Mean estimated aggregate CPU was 319.5% versus 403.4% of one core, summing two BMv2 process measurements with approximate trial-window alignment. This small supplementary campaign does not prove superior VXLAN CPU efficiency and must remain separate from the 240-trial performance study.
 
 The publication inventory in the addendum distinguishes artifacts already committed in the repository from raw CSVs, generated scalability figures, packet captures, logs and CPU samples reported on the operator's WSL2 machine. No uncommitted local file is represented as an existing GitHub artifact.
-
