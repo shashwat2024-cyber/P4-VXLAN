@@ -14,6 +14,8 @@ This report consolidates the completed WSL2/BMv2/Mininet work described by the p
 | Tenant scalability | Completed | 2, 4, 6 and 8 tenants; observed connectivity checks 4/4, 8/8, 12/12 and 16/16 |
 | VTEP scalability | Completed | 2, 3 and 4 VTEPs with two tenants; observed connectivity checks 4/4, 12/12 and 24/24 |
 | Crafted-packet isolation verification | Completed for the stated test cases, with explicit evidence limitations | See isolation section below; endpoint non-delivery alone does not identify the exact drop point |
+| UDP application-payload sweep | Local implementation/analysis scripts recorded; final result CSV not verified in this repository snapshot | `scripts/udp_payload_sweep.py`, `scripts/analyze_udp_payload_sweep.py` were shown in local WSL2 `git status`; do not treat script presence as proof all planned trials completed |
+| Table occupancy / lookup-cost pilot | Local pilot script recorded; final output and completed measurements not verified in this repository snapshot | `scripts/table_occupancy.py` default output path was `results/scalability/table_occupancy_pilot_20261027.csv`; publish the original output before reporting numerical lookup-cost findings |
 | CPU utilisation comparison | Completed as a supplementary three-trial-per-configuration campaign | Sample-aligned CPU values are estimates; brief run, approximate trial window, two BMv2 processes |
 | Reproduction and analysis code | Present | Environment-specific verification remains necessary for other systems |
 
@@ -138,3 +140,14 @@ The operator reports that the repeated analysis/unit tests passed previously (10
 ## Final project status
 
 The core implementation, 240-trial performance campaign, six-MSS comparison, statistical analysis, tenant/VTEP scaling tests, crafted-packet check, and supplementary CPU campaign have been completed by the operator in WSL2 according to the supplied run summaries. The remaining repository-publishing task is to copy the original local datasets, graph images, packet captures and logs into version control, then update the paper's final results section to cite those actual files. This report does not claim those uncommitted artifacts have already been uploaded.
+
+
+## Follow-up audit of local UDP payload and table-occupancy work (28 October 2026)
+
+A subsequent review of the operator's local WSL2 terminal records found untracked files `scripts/udp_payload_sweep.py` and `scripts/analyze_udp_payload_sweep.py`, as well as `scripts/table_occupancy.py`. The UDP payload script was designed for application payload sizes of 256, 512, 768, 1024 and 1200 bytes at 5 Mbps, with five planned trials per payload size for each of two tenants (50 planned observations). This is separate from the completed UDP offered-rate sweep at 5, 15 and 25 Mbps. The local terminal record also shows that the table-occupancy script defaults to `results/scalability/table_occupancy_pilot_20261027.csv` and installs padding entries to target different decapsulation-table occupancies.
+
+These local records correct the earlier wording that UDP payload-sweep automation remained unimplemented. They establish script presence and intended protocol, but the exact final payload CSV, actual successful trial count, and final table-occupancy output were not available as files in the current working environment during this repository update. Therefore this report does not invent result values or mark the lookup-cost measurement as conclusively completed. The original WSL2 CSVs, plots (if generated), and relevant logs should be copied from the machine that ran the experiments and committed to `main`; summaries must be regenerated from those raw outputs.
+
+## Repository publication audit
+
+The main branch contains the consolidated addendum and a subset of the final-evaluation files, but the local WSL2 `git status` record dated 27 October lists many additional staged or untracked outputs, including `scripts/udp_payload_sweep.py`, `scripts/analyze_udp_payload_sweep.py`, `scripts/table_occupancy.py`, `results/scalability/`, `results/analysis_20261027/`, `results/archive/`, `results/evidence/`, and other campaign CSVs. The current chat workspace does not contain the actual WSL2 repository directory or all of these raw outputs, so they cannot safely be uploaded from this environment. No synthetic CSVs or placeholder result files have been created. This documentation update is committed to `main`; publication of the original experiment files still requires copying them from the WSL2 worktree.
