@@ -6,7 +6,7 @@ This plan follows the correction sheet supplied for Team 12. It distinguishes re
 
 - **Added:** per-tenant raw trial logging for the P4 VXLAN path in scripts/benchmark.py, configurable trial count/duration/MSS, warm-up exclusion, per-condition summary statistics, a campaign orchestrator for the six TCP MSS values, tool-version recording, raw schema and experiment guidance.
 - **Not run in this environment:** live P4 compilation, Mininet/BMv2 traffic generation, repeated throughput trials, baseline trials, Scapy packet injection and multi-VTEP scaling. This execution environment does not have p4c, simple_switch, Mininet or iperf3 installed and cannot run your WSL2 namespaces.
-- **Not yet implemented:** a matched no-VXLAN baseline topology, MSS campaign automation for six TCP values and a plain-L2 baseline option, UDP payload sweep automation, Scapy VNI-spoof/wrong-destination tests, per-VNI counters, and an 8-tenant/3–4-VTEP topology. These remain necessary to call the whole correction sheet complete.
+- **Later local work recorded on 27 October 2026:** the operator's WSL2 worktree contained `scripts/udp_payload_sweep.py`, `scripts/analyze_udp_payload_sweep.py`, and `scripts/table_occupancy.py`, alongside additional local result directories. This supersedes the earlier statement that UDP payload-sweep automation was not implemented. The exact final UDP payload-sweep CSV and final table-occupancy/lookup-cost measurements are not confirmed in this repository snapshot; do not claim the experiments' final numerical results are published until the original output files are committed. The broader campaign and isolation work is documented in `docs/experiments/final-results-addendum-2026-10-27.md`.
 
 ## 1. Baseline and repeated trials
 
@@ -25,7 +25,7 @@ The orchestrator launches a Mininet-owned benchmark for each MSS setting, append
 
 Keep the TCP MSS sweep and UDP payload-size sweep separate. Suggested TCP MSS values: 500, 700, 900, 1100, 1300 and 1400 bytes, as six independent conditions with ten 30-second trials each. Confirm the negotiated MSS in a capture or iperf output; an endpoint command-line option alone is not evidence that every connection used the requested value. For UDP, specify an application datagram size, bandwidth, duration, receiver throughput, packet loss and jitter. Do not call the UDP datagram size a TCP MSS.
 
-The campaign runner automates all six requested TCP MSS values in separate Mininet sessions. Each condition is kept separate in the raw CSV and summary.
+The campaign runner automates all six requested TCP MSS values in separate Mininet sessions. Each condition is kept separate in the raw CSV and summary. Separately, local WSL2 records show UDP payload-sweep scripts for 256, 512, 768, 1024 and 1200-byte application payloads at a fixed 5 Mbps, with five planned trials per payload size per tenant (50 planned observations total). This is distinct from the already summarised 5/15/25-Mbps offered-load sweep. The local script presence and planned protocol are evidenced; the final CSV contents and successful observation count must be checked before quoting final results.
 
 ## 3. Isolation tests against misuse
 
@@ -50,3 +50,8 @@ For the next revision: remove course-only headers and the “Prepared October 20
 ## Data handling
 
 The campaign runner measures the requested TCP MSS values in separate runs. The raw CSV schema is documented in `results/REPEATED_TRIALS_SCHEMA.md`. Keep historical results unchanged and preserve failed attempts with a failure status/reason. The analyzer only includes successful numeric receiver-throughput values and keeps conditions with different MSS, duration, tenant, configuration, MTU, transport or offload setting separate. It writes intervals only when there are at least two observations. No fabricated or projected trial results should be added.
+
+
+## 7. Table occupancy and lookup-cost experiment status
+
+A local script named `scripts/table_occupancy.py` was present in the operator's WSL2 worktree. Its recorded code targets decapsulation-table occupancy levels, installs padding entries on both VTEPs, and writes a pilot CSV by default to `results/scalability/table_occupancy_pilot_20261027.csv`. This is evidence that a table-occupancy experiment was implemented or piloted, not by itself evidence that a controlled lookup-cost benchmark completed. Before claiming lookup-cost results, publish the original CSV and document the occupancy levels, repetitions, traffic load, measured metric, success/failure counts, and whether the metric measures forwarding latency/throughput or merely harness duration. Table occupancy must not be conflated with tenant/VTEP connectivity scalability.
