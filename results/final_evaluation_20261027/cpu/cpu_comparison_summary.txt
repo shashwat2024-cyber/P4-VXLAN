@@ -1,0 +1,15 @@
+CPU UTILISATION COMPARISON — PILOT
+Settings: Tenant A, TCP, MSS 1000, MTU 1450, tx_off, 30-second trials
+NOTE: Approximate alignment only. Benchmark timestamps are recorded after
+iperf3 and ping; each CPU window is estimated as timestamp minus 39 to
+timestamp minus 9 seconds. These results are exploratory, not precise.
+
+--- P4_VXLAN ---
+Trial 1: throughput=28.5629418525909 Mbps; window samples=0; no nonzero CPU values
+Trial 2: throughput=28.77527351620325 Mbps; window samples=0; no nonzero CPU values
+Trial 3: throughput=28.311406795484167 Mbps; window samples=0; no nonzero CPU values
+
+--- P4_L2_BASELINE ---
+Trial 1: throughput=73.3978601420909 Mbps; window samples=56; nonzero CPU sample mean=210.61% across all sampled switch processes
+Trial 2: throughput=68.35194122325115 Mbps; window samples=54; nonzero CPU sample mean=196.40% across all sampled switch processes
+Trial 3: throughput=68.58555828352807 Mbps; window samples=56; nonzero CPU sample mean=206.38% across all sampled switch processes

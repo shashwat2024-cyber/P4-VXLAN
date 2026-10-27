@@ -1,0 +1,5 @@
+mode,tenants,vteps,connectivity_passed,connectivity_total,connectivity_ok,setup_seconds,test_seconds,notes
+tenants,2,2,4,4,1,2.177,0.024,
+tenants,4,2,8,8,1,2.244,0.043,
+tenants,6,2,12,12,1,2.221,0.062,
+tenants,8,2,16,16,1,2.184,0.079,
