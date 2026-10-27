@@ -1,158 +1,83 @@
 # P4 VXLAN: Multi-Tenant Networking and Isolation
 
+## Final WSL2 results (27 October 2026)
+
+See the detailed [consolidated experiment addendum](docs/experiments/final-results-addendum-2026-10-27.md) for the completed main 240-trial campaign (reported 120 trials/configuration across six TCP MSS conditions), Welch/95% CI analysis, tenant and VTEP scalability results, crafted-packet isolation evidence and limitations, supplementary CPU measurements, manuscript corrections, and an explicit inventory of which raw files/figures still need publication from the operator's WSL2 worktree.
+
+The principal reported conclusions are that VXLAN receiver throughput was lower than the plain-L2 forwarding baseline for every tested MSS in the main campaign; tenant reachability checks passed through eight tenants and VTEP connectivity checks passed through four VTEPs; and the separate, exploratory CPU campaign reported mean estimated aggregate CPU of 319.5% of one core (VXLAN) versus 403.4% (baseline), alongside mean receiver throughput of 28.14 versus 71.81 Mbps. The CPU figures are small-sample, approximate-window estimates—not proof that VXLAN is more CPU-efficient.
+
+**Artifact integrity:** the addendum names the exact local WSL2 paths for the 240-trial CSV, scalability CSVs/plots, packet captures/logs, and CPU CSVs. These are not described as published GitHub files until the original artifacts themselves are committed. Keep historical short runs separate from the 30-second campaign and do not fabricate missing raw rows or plots.
+
 ## Overview
+This project evaluates P4-based VXLAN encapsulation, connectivity, performance and tenant separation using BMv2 and Mininet. Results describe software emulation on the specified host/WSL2 environment; they are not hardware-switch line-rate measurements.
 
-This project evaluates VXLAN-based multi-tenancy and tenant isolation in a P4-programmable software-emulated network using BMv2 and Mininet.
+## Topology
+| Tenant | Hosts | VNI | Subnet |
+|---|---|---:|---|
+| Tenant A | h1, h2 | 1001 | 192.168.10.0/24 |
+| Tenant B | h3, h4 | 1002 | 192.168.20.0/24 |
 
-The project focuses on implementing VXLAN packet processing, separating network tenants, testing connectivity, evaluating network performance, and checking whether communication between different tenants is blocked as intended.
+The VXLAN path encapsulates by tenant-facing ingress port and decapsulates using the VNI and inner IPv4 destination. Unmatched table entries use a drop action.
 
-## Objectives
-
-- Demonstrate VXLAN encapsulation and decapsulation using P4.
-- Implement network segmentation using tenant-specific VXLAN Network Identifiers (VNIs).
-- Test connectivity between hosts belonging to the same tenant.
-- Evaluate network performance using throughput and latency measurements.
-- Test cross-tenant isolation using network probes.
-- Document the experimental procedure, results, and limitations.
-
-## Technologies Used
-
-- **P4:** Programmable data-plane packet processing.
-- **BMv2:** Software-based P4 switch.
-- **Mininet:** Network topology emulation.
-- **p4c:** P4 compiler.
-- **Ubuntu 24.04 under WSL2:** Experimental environment.
-- **iperf3:** Network throughput measurement.
-- **ICMP ping:** Connectivity and round-trip latency testing.
-- **Python:** Benchmark automation and result processing.
-
-## Network Architecture
-
-The experimental topology consists of two tenants connected through a shared network infrastructure.
-
-| Tenant | Hosts | Planned VNI |
-|---|---|---|
-| Tenant A | h1, h2 | 1001 |
-| Tenant B | h3, h4 | 1002 |
-
-The intended design allows communication between hosts belonging to the same tenant while preventing unauthorized communication across tenant boundaries.
-
-The project uses P4-based packet processing and forwarding rules to support the intended VXLAN and isolation behavior.
-
-## Evaluation Methodologies
-
-Three evaluation methodologies are used to examine the network's behavior.
-
-### 1. Same-Tenant Connectivity Testing
-
-**Objective:** Verify that hosts belonging to the same tenant can communicate successfully.
-
-**Method:**
-- Use ICMP ping to test connectivity between hosts assigned to the same tenant.
-- Record the number of transmitted and received packets.
-- Observe packet loss and round-trip time (RTT).
-
-**Recorded results:**
-
-| Tested host pair | Packets received | Packet loss | Average RTT |
-|---|---:|---:|---:|
-| First tested pair | 3/3 | 0% | 8.146 ms |
-| Second tested pair | 3/3 | 0% | 7.754 ms |
-
-The recorded tests demonstrate successful connectivity for the tested host pairs. These results should not be interpreted as a guarantee for every possible host pair or network condition.
-
-### 2. Network Performance Evaluation
-
-**Objective:** Measure network performance and examine throughput and latency.
-
-**Method:**
-- Use `iperf3` to collect throughput measurements.
-- Use ping measurements to observe round-trip latency and packet loss.
-- Store measurement data and experiment logs for analysis.
-- Use the recorded results and generated graph to examine performance.
-
-The repository contains performance-related data under `results/`, including measurement files, test notes, run logs, and a throughput graph.
-
-**Important consideration:** Performance results must be interpreted in the context of the experimental environment, test duration, traffic parameters, and number of trials. Short diagnostic runs alone are not sufficient to establish statistically robust performance differences.
-
-### 3. Cross-Tenant Isolation Testing
-
-**Objective:** Check whether traffic between different tenants is blocked as intended.
-
-**Method:**
-- Attempt communication from Tenant A to Tenant B.
-- Attempt communication in the reverse direction.
-- Record packet delivery and packet loss.
-- Compare the observed behavior with the intended tenant-isolation policy.
-
-**Recorded results:**
-
-| Test direction | Packets sent | Packets received | Packet loss |
-|---|---:|---:|---:|
-| Tenant A to Tenant B | 3 | 0 | 100% |
-| Tenant B to Tenant A | 3 | 0 | 100% |
-
-The recorded results are consistent with the intended isolation policy for the tested flows.
-
-However, these tests do not constitute exhaustive proof that every possible protocol, packet type, or communication path is isolated. The experiment report also notes that packet captures observed UDP traffic on port 4789, but did not independently verify the VXLAN VNI and inner destination for every captured packet.
-
-## Results Summary
-
-| Evaluation | Observation | Conclusion |
-|---|---|---|
-| Same-tenant connectivity | Both documented host-pair tests received 3/3 replies | Connectivity succeeded in the recorded tests |
-| Cross-tenant isolation | Both tested directions experienced 100% packet loss | Results are consistent with isolation for the tested flows |
-| Network performance | `iperf3` measurements and related result files are available | Raw measurements and test notes should be consulted before drawing performance comparisons |
-
-These results describe the documented experimental runs in a software-emulated network environment.
-
-## Repository Structure
-
-Important project files and directories include:
-
+## Repository map
 | Path | Purpose |
 |---|---|
-| `paper/methodology.md` | Research objective, environment, configurations, metrics, and experimental procedure |
-| `docs/experiments/isolation-test-report.md` | Recorded connectivity and isolation test results |
-| `docs/experiments/reproduction.md` | Instructions and notes for reproducing experiments |
-| `scripts/benchmark.py` | Benchmark automation for throughput, ping statistics, and cross-tenant checks |
-| `results/` | Measurement files, test notes, run logs, and generated performance graph(s) |
+| src/p4/vxlan.p4 | P4_16 VXLAN parser, encapsulation, decapsulation and forwarding |
+| src/p4/baseline.p4 | Plain-L2 P4 forwarding baseline without VXLAN headers |
+| topology/vxlan_topology.py | Two-VTEP Mininet VXLAN topology |
+| topology/baseline_topology.py | Matching no-VXLAN baseline topology |
+| scripts/benchmark.py | Repeated measurements on one VXLAN condition |
+| scripts/baseline_benchmark.py | Repeated measurements on one plain-L2 baseline condition |
+| scripts/repeated_benchmark.py | MSS campaign orchestration, optional paired baseline, tool metadata |
+| scripts/analyze_repeated_trials.py | Mean, sample SD, and 95% confidence intervals from raw CSV |
+| scripts/test_repeated_analysis.py | Statistics unit tests |
+| docs/experiments/reproduction.md | Compile, run, repeat and analyze instructions |
+| docs/experiments/baseline-and-sweeps.md | Corrections checklist and remaining tests |
+| results/REPEATED_TRIALS_SCHEMA.md | Raw measurement schema and reporting rules |
+| results/ | Historical data, new raw measurements and plots |
 
-## Experimental Procedure
+## Toolchain and compilation
+Run these from the repository root in the configured Ubuntu/WSL2 environment. Confirm tool versions using the commands in the reproduction guide.
 
-The documented methodology follows these general steps:
+```bash
+mkdir -p build
+p4c --target bmv2 --arch v1model -o build/vxlan.json src/p4/vxlan.p4
+p4c --target bmv2 --arch v1model -o build/baseline.json src/p4/baseline.p4
+```
 
-1. Set up the P4 compiler, BMv2, and Mininet environment.
-2. Configure the network topology and tenant-specific forwarding behavior.
-3. Verify connectivity between hosts belonging to the same tenant.
-4. Attempt communication between hosts belonging to different tenants.
-5. Measure throughput and latency using the available benchmark tools.
-6. Save experiment outputs and measurement data.
-7. Compare observations against the intended connectivity and isolation policies.
-8. Document limitations and preserve raw results for reproducibility.
+P4C may create a directory at an output path depending on the installed version. Inspect build output and ensure the final JSON files are regular files at `build/vxlan.json` and `build/baseline.json` before running Mininet. Do not delete uninspected compiler output.
 
-For the exact commands and environment-specific instructions, consult `docs/experiments/reproduction.md`.
+## Repeated benchmark campaign
+To run six TCP MSS conditions (500, 700, 900, 1100, 1300 and 1400 bytes), each with ten recorded 30-second trials for both tenants, and also run the no-VXLAN baseline, use:
 
-## Limitations
+```bash
+sudo python3 scripts/repeated_benchmark.py --trials 10 --duration 30 --mss 500 700 900 1100 1300 1400 --with-baseline
+```
 
-- The connectivity and isolation conclusions apply to the specific host pairs and traffic flows tested.
-- ICMP packet loss alone does not establish that every possible form of cross-tenant communication is blocked.
-- Performance comparisons require sufficient repeated trials and appropriate analysis before statistically strong conclusions can be made.
-- BMv2 and Mininet results characterize a software-emulated environment; they do not establish physical-switch line-rate performance or hardware VXLAN offload capability.
-- Experiment results should be based on recorded measurements rather than assumed or fabricated values.
+This launches a fresh Mininet topology for each condition. Each tenant/condition has one excluded warm-up, then the specified measured trials. The orchestrator alternates baseline/VXLAN order across MSS values and records tool metadata to `results/environment.json`. Raw trial rows (including failed attempts and their reasons) append to `results/repeated_trials.csv`.
 
-## Conclusion
+The plain-L2 baseline is a forwarding-performance comparison, **not** a tenant-isolation configuration. It deliberately uses no VXLAN VNI or encapsulation. The campaign code and baseline are newly added but have **not been compiled or run in this ChatGPT environment**; verify on your actual WSL2 P4C/BMv2/Mininet setup before relying on the results.
 
-This project investigates VXLAN-based multi-tenancy and tenant isolation using a P4-programmable software-emulated network.
+Analyze actual observations after execution:
 
-The documented experiments cover three main areas: same-tenant connectivity, network performance, and cross-tenant isolation. The connectivity tests succeeded for the tested host pairs, while the cross-tenant probes experienced complete packet loss in both tested directions, consistent with the intended isolation policy.
+```bash
+python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv
+python3 -m unittest scripts/test_repeated_analysis.py
+```
 
-Performance measurements are available in the repository and should be interpreted alongside their associated test notes and experimental conditions.
+The analyzer groups by experiment, configuration, tenant, transport, MSS, payload, duration, MTU and offload so unlike conditions are not pooled. It reports mean, sample standard deviation and approximate two-sided 95% Student-t confidence intervals where there are at least two successful throughput observations. Failed or malformed rows do not contribute to throughput summaries, but stay in the raw file.
 
-Further testing across additional flows, protocols, and repeated performance trials would strengthen the evaluation.
+## Evidence status and remaining corrections
+The existing 3-second MSS-1000 figures (Tenant A 26.9 and 26.2 Mbps; Tenant B 26.5 Mbps) and earlier 5-/10-second MTU-1450 figures are historical measurements. They are not the output of the new campaign and must not be pooled across different conditions.
 
-## Further Documentation
+The repeated VXLAN campaign and plain-L2 baseline code are present, but live trials have not been run from this environment. UDP application-payload sweep, Scapy-crafted VNI spoofing/wrong-inner-destination tests, packet captures and counters, and scale testing to eight tenants and three or four VTEPs remain outstanding. A failed ping does not prove exactly where a packet was dropped. See docs/experiments/baseline-and-sweeps.md.
 
-- [Research Methodology](paper/methodology.md)
-- [Isolation Test Report](docs/experiments/isolation-test-report.md)
-- [Experiment Reproduction Guide](docs/experiments/reproduction.md)
+## Checksum notes
+The P4 checksum control recalculates the emitted IPv4 header: the new outer IPv4 header on encapsulation, and the restored inner IPv4 header after decapsulation. Outer UDP checksum is set to zero (permitted for IPv4 UDP). P4 input checksum verification is not implemented in the current verify-checksum control. Validate packet captures and checksum behaviour for the actual tested traffic types; do not use endpoint offload settings to obscure a data-plane checksum problem.
+
+## References and reports
+- Historical results and conditions: paper/results.md
+- Research methodology: paper/methodology.md
+- Testbed reproduction: docs/experiments/reproduction.md
+- Correction checklist and limitations: docs/experiments/baseline-and-sweeps.md
+- Isolation report: docs/experiments/isolation-test-report.md
