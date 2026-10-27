@@ -1,5 +1,13 @@
 # P4 VXLAN: Multi-Tenant Networking and Isolation
 
+## Final WSL2 results (27 October 2026)
+
+See the detailed [consolidated experiment addendum](docs/experiments/final-results-addendum-2026-10-27.md) for the completed main 240-trial campaign (reported 120 trials/configuration across six TCP MSS conditions), Welch/95% CI analysis, tenant and VTEP scalability results, crafted-packet isolation evidence and limitations, supplementary CPU measurements, manuscript corrections, and an explicit inventory of which raw files/figures still need publication from the operator's WSL2 worktree.
+
+The principal reported conclusions are that VXLAN receiver throughput was lower than the plain-L2 forwarding baseline for every tested MSS in the main campaign; tenant reachability checks passed through eight tenants and VTEP connectivity checks passed through four VTEPs; and the separate, exploratory CPU campaign reported mean estimated aggregate CPU of 319.5% of one core (VXLAN) versus 403.4% (baseline), alongside mean receiver throughput of 28.14 versus 71.81 Mbps. The CPU figures are small-sample, approximate-window estimates—not proof that VXLAN is more CPU-efficient.
+
+**Artifact integrity:** the addendum names the exact local WSL2 paths for the 240-trial CSV, scalability CSVs/plots, packet captures/logs, and CPU CSVs. These are not described as published GitHub files until the original artifacts themselves are committed. Keep historical short runs separate from the 30-second campaign and do not fabricate missing raw rows or plots.
+
 ## Overview
 This project evaluates P4-based VXLAN encapsulation, connectivity, performance and tenant separation using BMv2 and Mininet. Results describe software emulation on the specified host/WSL2 environment; they are not hardware-switch line-rate measurements.
 
