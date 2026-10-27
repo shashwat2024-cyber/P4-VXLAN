@@ -14,8 +14,8 @@ This report consolidates the completed WSL2/BMv2/Mininet work described by the p
 | Tenant scalability | Completed | 2, 4, 6 and 8 tenants; observed connectivity checks 4/4, 8/8, 12/12 and 16/16 |
 | VTEP scalability | Completed | 2, 3 and 4 VTEPs with two tenants; observed connectivity checks 4/4, 12/12 and 24/24 |
 | Crafted-packet isolation verification | Completed for the stated test cases, with explicit evidence limitations | See isolation section below; endpoint non-delivery alone does not identify the exact drop point |
-| UDP application-payload sweep | Local implementation/analysis scripts recorded; final result CSV not verified in this repository snapshot | `scripts/udp_payload_sweep.py`, `scripts/analyze_udp_payload_sweep.py` were shown in local WSL2 `git status`; do not treat script presence as proof all planned trials completed |
-| Table occupancy / lookup-cost pilot | Local pilot script recorded; final output and completed measurements not verified in this repository snapshot | `scripts/table_occupancy.py` default output path was `results/scalability/table_occupancy_pilot_20261027.csv`; publish the original output before reporting numerical lookup-cost findings |
+| UDP application-payload sweep | Results summary and report published | See `results/final_evaluation_20261027/udp_payload_sweep/`; 50 recorded trials are summarized, with five trials per tenant/payload condition. |
+
 | CPU utilisation comparison | Completed as a supplementary three-trial-per-configuration campaign | Sample-aligned CPU values are estimates; brief run, approximate trial window, two BMv2 processes |
 | Reproduction and analysis code | Present | Environment-specific verification remains necessary for other systems |
 
@@ -27,7 +27,7 @@ The completed campaign used two configurations: `P4_VXLAN` and `P4_L2_BASELINE`,
 
 The reported analysis found lower VXLAN receiver throughput at each tested MSS, statistically significant Welch tests, and baseline-minus-VXLAN 95% confidence intervals that excluded zero. The reported estimated throughput reduction was approximately 59–63%, depending on MSS.
 
-**Data publication note:** the exact 240-trial CSV and generated statistical outputs are not present among the files currently committed to this branch at the time this addendum was authored. The path above identifies the operator's local file, not an already-published GitHub asset. Add the exact CSV and analyzer outputs from the WSL2 worktree before citing them as repository artifacts. Do not reconstruct trial rows from summary values or invent confidence intervals, p-values, or graph data.
+**Data publication note:** the exact 240-trial CSV and some generated statistical outputs still need publication as original artifacts. The path above identifies the operator's local file, not an already-published GitHub asset. Add the exact CSV and analyzer outputs from the WSL2 worktree before citing them as repository artifacts. Do not reconstruct trial rows from summary values or invent confidence intervals, p-values, or graph data.
 
 ## Scalability experiments
 
@@ -67,7 +67,7 @@ The operator reports these generated local figures:
 - `results/scalability/vtep_scalability_test_time.png`
 - `results/scalability/scalability_connectivity.png`
 
-The image files need to be copied from the WSL2 worktree into this repository to be directly viewable in GitHub. Do not recreate these plots from summary text alone; regenerate them from the original CSVs if the originals are unavailable.
+The local image files should be copied from the WSL2 worktree into this repository to be directly viewable in GitHub. Do not recreate these plots from summary text alone; regenerate them from the original CSVs if the originals are unavailable.
 
 ## Crafted VXLAN isolation experiment
 
@@ -84,6 +84,10 @@ Interpretation is deliberately bounded: the combination of the live table's defa
 
 Evidence checksum for the recorded test script:
 `561e01df5a4286a4a2289597c456b3c2fe27f69140aca1fd82ff58715acc89db`.
+
+## UDP application-payload sweep
+
+The payload-size sweep varies UDP application datagram size (256, 512, 768, 1024 and 1200 bytes) at a configured 5 Mbps for 30 seconds. Five trials were recorded for each tenant/payload condition (50 total). The summary and experiment report are published under `results/final_evaluation_20261027/udp_payload_sweep/`. The smallest payload condition showed higher observed loss and variability, particularly for Tenant B; with five repetitions per condition, this remains a descriptive observation rather than proof of a causal payload-size effect. This sweep is distinct from the 5/15/25-Mbps offered-load sweep.
 
 ## Supplementary CPU utilisation comparison
 
