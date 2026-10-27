@@ -111,3 +111,15 @@ After execution, summarize the new raw rows with
 `python3 scripts/analyze_repeated_trials.py results/repeated_trials.csv`
 and insert the measured summaries and confidence intervals here, keeping
 the baseline and each MSS/payload condition separate.
+
+## 7. Consolidated final evaluation status (27 October 2026)
+
+The project operator subsequently completed the main repeated campaign and scalability work in the configured WSL2 environment. The detailed consolidated report, including reported conditions, summary values, cautions, and exact paths for artifacts that still need uploading, is maintained at [Final WSL2 Results and Evidence Inventory](../docs/experiments/final-results-addendum-2026-10-27.md).
+
+That report records the main campaign as 240 trials: 120 each for P4 VXLAN and plain-L2 baseline across TCP MSS 500, 700, 900, 1100, 1300 and 1400 bytes, with 30-second measured trials, MTU 1450 and TX offload disabled. The operator reports statistically significant Welch comparisons and 95% confidence intervals for baseline-minus-VXLAN throughput differences that excluded zero at all tested MSS settings. Exact p-values, confidence limits and per-MSS means should be cited only from the original raw dataset and analyzer output; this document does not reconstruct them from rounded summary statements.
+
+Tenant-scale connectivity checks passed at 2, 4, 6 and 8 tenants (4/4, 8/8, 12/12 and 16/16); VTEP-scale checks with two tenants passed at 2, 3 and 4 VTEPs (4/4, 12/12 and 24/24). The crafted-packet test and its evidence limitations are also documented in the addendum.
+
+A separate exploratory CPU campaign used three measured 30-second Tenant A trials per configuration at MSS 1000, MTU 1450 and `tx_off`. Mean receiver throughput was 28.14 Mbps for VXLAN and 71.81 Mbps for plain L2. Mean estimated aggregate CPU was 319.5% versus 403.4% of one core, summing two BMv2 process measurements with approximate trial-window alignment. This small supplementary campaign does not prove superior VXLAN CPU efficiency and must remain separate from the 240-trial performance study.
+
+The publication inventory in the addendum distinguishes artifacts already committed in the repository from raw CSVs, generated scalability figures, packet captures, logs and CPU samples reported on the operator's WSL2 machine. No uncommitted local file is represented as an existing GitHub artifact.
