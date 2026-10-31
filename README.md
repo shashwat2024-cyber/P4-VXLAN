@@ -73,3 +73,35 @@ The P4 checksum control recalculates the emitted IPv4 header: the new outer IPv4
 - Testbed reproduction: docs/experiments/reproduction.md
 - Correction checklist and limitations: docs/experiments/baseline-and-sweeps.md
 - Isolation report: docs/experiments/isolation-test-report.md
+
+
+## Second-level corrections (31 October 2026)
+
+Work for the professor's second-level review is being carried out on the
+`mam-second-level-corrections` branch. Do not treat a source edit as a
+validated result until the corresponding runtime test and evidence are recorded.
+
+### Implemented; runtime validation pending
+
+- Decapsulation is gated to the underlay-facing ingress port (port 3 in the
+  supplied two-VTEP topology).
+- Encapsulation is gated to tenant-facing ingress ports 1 and 2.
+- The outer IPv4 total-length field is set to the inner IPv4 total length plus
+  50 bytes. The outer UDP length remains inner IPv4 total length plus 30 bytes.
+- `scripts/test_tenant_vxlan_injection.py` sends the reviewer-specified
+  tenant-originated VXLAN-shaped packet: VNI 1002, inner destination
+  192.168.20.1, entering through Tenant A's host-facing interface.
+
+### Validation log
+
+- 2026-10-31: Corrected `src/p4/vxlan.p4` compiled successfully with
+  `p4c --target bmv2 --arch v1model -o build/verify_second_level src/p4/vxlan.p4`.
+  The generated `build/verify_second_level/vxlan.json` was present.
+- Pending: same-tenant positive controls, tenant-originated injection negative
+  test with a simultaneous capture at h3, packet-length inspection, routed
+  underlay/interoperability, and scaled negative tests.
+
+The compile result establishes P4 compiler acceptance only. It does not by
+itself establish successful forwarding, tenant isolation, or RFC 7348
+interoperability. Update this log only when the corresponding output or
+capture has been inspected.
