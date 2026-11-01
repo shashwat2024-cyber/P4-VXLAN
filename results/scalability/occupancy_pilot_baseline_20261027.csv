@@ -1,0 +1,2 @@
+campaign_id,trial_number,experiment_id,timestamp_utc,configuration,tenant,transport,target_mbps,duration_seconds,receiver_mbps,udp_loss_percent,latency_ms,ping_loss_percent,status,command,notes
+occupancy_pilot_20261027,1,20261027T125032Z-4cd9282d,2026-10-27T12:50:32.569767+00:00,P4_VXLAN_UDP,A,UDP,5,5,4.994949346592323,0.0,6.418,0.0,success,iperf3 -c 192.168.10.2 -u -b 5M -t 5 -J,git_commit=5d8ac01ca3d39e3a2744558641c453d9a9a9725b

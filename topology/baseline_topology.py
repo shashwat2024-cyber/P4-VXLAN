@@ -15,7 +15,7 @@ from mininet.log import setLogLevel, info
 from topology.vxlan_topology import P4Switch
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-JSON = os.path.join(ROOT, "build", "baseline.json")
+JSON = os.path.join(ROOT, "build", "baseline_compile", "baseline.json")
 
 class BaselineTopo(Topo):
     def build(self):

@@ -1,0 +1,267 @@
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+
+SCALABILITY ANALYSIS
+-----------------------------------------------------------------
+Rows: 60
+Successful: 60
+Factor: target_mbps
+
+Descriptive summary:
+    dataset      factor  level tenant                   metric  n      mean       std  ci95_low  ci95_high            ci_method
+scalability target_mbps      5      A            receiver_mbps 10  4.999304  0.000292  4.999116   4.999457 percentile_bootstrap
+scalability target_mbps      5      A         udp_loss_percent 10  0.000000  0.000000  0.000000   0.000000 percentile_bootstrap
+scalability target_mbps      5      A   under_load_rtt_mean_ms 10  1.755500  0.091994  1.702300   1.809600 percentile_bootstrap
+scalability target_mbps      5      A    under_load_rtt_max_ms 10  6.917100  2.343512  5.577698   8.328407 percentile_bootstrap
+scalability target_mbps      5      A       rss_mean_total_mib 10 63.450647  0.233299 63.303170  63.547676 percentile_bootstrap
+scalability target_mbps      5      A       rss_peak_total_mib 10 63.478125  0.214762 63.340625  63.549219 percentile_bootstrap
+scalability target_mbps      5      A rss_mean_per_process_mib 10 31.725323  0.116650 31.651431  31.773812 percentile_bootstrap
+scalability target_mbps      5      A rss_peak_per_process_mib 10 31.741406  0.106799 31.673437  31.776172 percentile_bootstrap
+scalability target_mbps      5      A               latency_ms 10  6.391200  1.029746  5.749800   6.949207 percentile_bootstrap
+scalability target_mbps      5      B            receiver_mbps 10  4.996811  0.007328  4.992141   4.999206 percentile_bootstrap
+scalability target_mbps      5      B         udp_loss_percent 10  0.046227  0.146183  0.000000   0.138682 percentile_bootstrap
+scalability target_mbps      5      B   under_load_rtt_mean_ms 10  1.978600  0.474918  1.796500   2.291103 percentile_bootstrap
+scalability target_mbps      5      B    under_load_rtt_max_ms 10 10.181900  7.782715  7.173897  15.316127 percentile_bootstrap
+scalability target_mbps      5      B       rss_mean_total_mib 10 67.101524  0.000122 67.101447  67.101562 percentile_bootstrap
+scalability target_mbps      5      B       rss_peak_total_mib 10 67.101562  0.000000 67.101562  67.101562 percentile_bootstrap
+scalability target_mbps      5      B rss_mean_per_process_mib 10 33.550762  0.000061 33.550724  33.550781 percentile_bootstrap
+scalability target_mbps      5      B rss_peak_per_process_mib 10 33.605469  0.000000 33.605469  33.605469 percentile_bootstrap
+scalability target_mbps      5      B               latency_ms 10  7.353800  0.832739  6.837587   7.804400 percentile_bootstrap
+scalability target_mbps     15      A            receiver_mbps 10 14.987435  0.028530 14.969146  14.997012 percentile_bootstrap
+scalability target_mbps     15      A         udp_loss_percent 10  0.060892  0.192558  0.000000   0.182677 percentile_bootstrap
+scalability target_mbps     15      A   under_load_rtt_mean_ms 10  2.183500  0.231698  2.058400   2.326900 percentile_bootstrap
+scalability target_mbps     15      A    under_load_rtt_max_ms 10 19.738700 29.885880  8.981077  39.283742 percentile_bootstrap
+scalability target_mbps     15      A       rss_mean_total_mib 10 66.137609  0.712338 65.700743  66.539844 percentile_bootstrap
+scalability target_mbps     15      A       rss_peak_total_mib 10 66.275781  0.637772 65.879688  66.671875 percentile_bootstrap
+scalability target_mbps     15      A rss_mean_per_process_mib 10 33.068804  0.356169 32.850371  33.269922 percentile_bootstrap
+scalability target_mbps     15      A rss_peak_per_process_mib 10 33.439062  0.249071 33.284375  33.593750 percentile_bootstrap
+scalability target_mbps     15      A               latency_ms 10  7.001400  0.900464  6.445300   7.507207 percentile_bootstrap
+scalability target_mbps     15      B            receiver_mbps 10 14.997078  0.000838 14.996533  14.997515 percentile_bootstrap
+scalability target_mbps     15      B         udp_loss_percent 10  0.000000  0.000000  0.000000   0.000000 percentile_bootstrap
+scalability target_mbps     15      B   under_load_rtt_mean_ms 10  1.926100  0.126515  1.851600   2.000000 percentile_bootstrap
+scalability target_mbps     15      B    under_load_rtt_max_ms 10  7.531200  2.004306  6.434192   8.798512 percentile_bootstrap
+scalability target_mbps     15      B       rss_mean_total_mib 10 67.101562  0.000000 67.101562  67.101562 percentile_bootstrap
+scalability target_mbps     15      B       rss_peak_total_mib 10 67.101562  0.000000 67.101562  67.101562 percentile_bootstrap
+scalability target_mbps     15      B rss_mean_per_process_mib 10 33.550781  0.000000 33.550781  33.550781 percentile_bootstrap
+scalability target_mbps     15      B rss_peak_per_process_mib 10 33.605469  0.000000 33.605469  33.605469 percentile_bootstrap
+scalability target_mbps     15      B               latency_ms 10  6.705600  2.180786  5.361070   7.892202 percentile_bootstrap
+scalability target_mbps     25      A            receiver_mbps 10 24.995423  0.001451 24.994577  24.996253 percentile_bootstrap
+scalability target_mbps     25      A         udp_loss_percent 10  0.000000  0.000000  0.000000   0.000000 percentile_bootstrap
+scalability target_mbps     25      A   under_load_rtt_mean_ms 10  2.398500  0.319485  2.217600   2.590803 percentile_bootstrap
+scalability target_mbps     25      A    under_load_rtt_max_ms 10 12.236600 10.200559  7.511273  19.031482 percentile_bootstrap
+scalability target_mbps     25      A       rss_mean_total_mib 10 66.914959  0.209223 66.793084  67.036834 percentile_bootstrap
+scalability target_mbps     25      A       rss_peak_total_mib 10 66.915625  0.209787 66.793750  67.037500 percentile_bootstrap
+scalability target_mbps     25      A rss_mean_per_process_mib 10 33.457480  0.104612 33.396542  33.518417 percentile_bootstrap
+scalability target_mbps     25      A rss_peak_per_process_mib 10 33.593750  0.000000 33.593750  33.593750 percentile_bootstrap
+scalability target_mbps     25      A               latency_ms 10  7.192100  1.199117  6.419995   7.798202 percentile_bootstrap
+scalability target_mbps     25      B            receiver_mbps 10 24.995440  0.001284 24.994637  24.996142 percentile_bootstrap
+scalability target_mbps     25      B         udp_loss_percent 10  0.000000  0.000000  0.000000   0.000000 percentile_bootstrap
+scalability target_mbps     25      B   under_load_rtt_mean_ms 10  2.387700  0.229037  2.253897   2.520402 percentile_bootstrap
+scalability target_mbps     25      B    under_load_rtt_max_ms 10 15.561200 13.299552  9.367480  24.394370 percentile_bootstrap
+scalability target_mbps     25      B       rss_mean_total_mib 10 67.160451  0.124153 67.101562  67.248540 percentile_bootstrap
+scalability target_mbps     25      B       rss_peak_total_mib 10 67.160938  0.125173 67.101562  67.250000 percentile_bootstrap
+scalability target_mbps     25      B rss_mean_per_process_mib 10 33.580225  0.062076 33.550781  33.624270 percentile_bootstrap
+scalability target_mbps     25      B rss_peak_per_process_mib 10 33.642969  0.079057 33.605469  33.699219 percentile_bootstrap
+scalability target_mbps     25      B               latency_ms 10  7.467600  1.366689  6.554875   8.103207 percentile_bootstrap
+
+Welch tests with Holm correction:
+    dataset      factor  level                   metric  n_A  n_B  tenant_A_mean  tenant_B_mean  difference_A_minus_B    welch_t      p_value                    test_status  holm_adjusted_p_value  holm_significant_0_05
+scalability target_mbps      5            receiver_mbps   10   10       4.999304       4.996811              0.002493   1.074783 3.103540e-01                             ok           1.000000e+00                  False
+scalability target_mbps      5         udp_loss_percent   10   10       0.000000       0.046227             -0.046227  -1.000000 3.434364e-01                             ok           1.000000e+00                  False
+scalability target_mbps      5   under_load_rtt_mean_ms   10   10       1.755500       1.978600             -0.223100  -1.458420 1.764124e-01                             ok           1.000000e+00                  False
+scalability target_mbps      5    under_load_rtt_max_ms   10   10       6.917100      10.181900             -3.264800  -1.270218 2.311332e-01                             ok           1.000000e+00                  False
+scalability target_mbps      5       rss_mean_total_mib   10   10      63.450647      67.101524             -3.650877 -49.486126 2.818363e-12                             ok           7.045908e-11                   True
+scalability target_mbps      5       rss_peak_total_mib   10   10      63.478125      67.101562             -3.623438 -53.353439 1.434830e-12                             ok           3.730559e-11                   True
+scalability target_mbps      5 rss_mean_per_process_mib   10   10      31.725323      33.550762             -1.825439 -49.486126 2.818363e-12                             ok           7.045908e-11                   True
+scalability target_mbps      5 rss_peak_per_process_mib   10   10      31.741406      33.605469             -1.864062 -55.193967 1.058291e-12                             ok           2.857386e-11                   True
+scalability target_mbps      5               latency_ms   10   10       6.391200       7.353800             -0.962600  -2.298540 3.429257e-02                             ok           5.486812e-01                  False
+scalability target_mbps     15            receiver_mbps   10   10      14.987435      14.997078             -0.009644  -1.068449 3.130904e-01                             ok           1.000000e+00                  False
+scalability target_mbps     15         udp_loss_percent   10   10       0.060892       0.000000              0.060892   1.000000 3.434364e-01                             ok           1.000000e+00                  False
+scalability target_mbps     15   under_load_rtt_mean_ms   10   10       2.183500       1.926100              0.257400   3.083355 8.136670e-03                             ok           1.383234e-01                  False
+scalability target_mbps     15    under_load_rtt_max_ms   10   10      19.738700       7.531200             12.207500   1.288802 2.293297e-01                             ok           1.000000e+00                  False
+scalability target_mbps     15       rss_mean_total_mib   10   10      66.137609      67.101562             -0.963954  -4.279272 2.052149e-03                             ok           4.719944e-02                   True
+scalability target_mbps     15       rss_peak_total_mib   10   10      66.275781      67.101562             -0.825781  -4.094491 2.698846e-03                             ok           5.667576e-02                  False
+scalability target_mbps     15 rss_mean_per_process_mib   10   10      33.068804      33.550781             -0.481977  -4.279272 2.052149e-03                             ok           4.719944e-02                   True
+scalability target_mbps     15 rss_peak_per_process_mib   10   10      33.439062      33.605469             -0.166406  -2.112746 6.378473e-02                             ok           9.567709e-01                  False
+scalability target_mbps     15               latency_ms   10   10       7.001400       6.705600              0.295800   0.396461 6.987347e-01                             ok           1.000000e+00                  False
+scalability target_mbps     25            receiver_mbps   10   10      24.995423      24.995440             -0.000017  -0.027573 9.783107e-01                             ok           1.000000e+00                  False
+scalability target_mbps     25         udp_loss_percent   10   10       0.000000       0.000000              0.000000   0.000000 1.000000e+00 both_groups_constant_and_equal           1.000000e+00                  False
+scalability target_mbps     25   under_load_rtt_mean_ms   10   10       2.398500       2.387700              0.010800   0.086880 9.318241e-01                             ok           1.000000e+00                  False
+scalability target_mbps     25    under_load_rtt_max_ms   10   10      12.236600      15.561200             -3.324600  -0.627250 5.388946e-01                             ok           1.000000e+00                  False
+scalability target_mbps     25       rss_mean_total_mib   10   10      66.914959      67.160451             -0.245492  -3.190944 6.233020e-03                             ok           1.246604e-01                  False
+scalability target_mbps     25       rss_peak_total_mib   10   10      66.915625      67.160938             -0.245312  -3.175481 6.409286e-03                             ok           1.246604e-01                  False
+scalability target_mbps     25 rss_mean_per_process_mib   10   10      33.457480      33.580225             -0.122746  -3.190944 6.233020e-03                             ok           1.246604e-01                  False
+scalability target_mbps     25 rss_peak_per_process_mib   10   10      33.593750      33.642969             -0.049219  -1.968750 8.050382e-02                             ok           1.000000e+00                  False
+scalability target_mbps     25               latency_ms   10   10       7.192100       7.467600             -0.275500  -0.479169 6.376849e-01                             ok           1.000000e+00                  False/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+/mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/.venv/lib/python3.12/site-packages/scipy/stats/_axis_nan_policy.py:601: RuntimeWarning: Precision loss occurred in moment calculation due to catastrophic cancellation. This occurs when the data are nearly identical. Results may be unreliable.
+  res = hypotest_fun_out(*samples, **kwds)
+
+
+PAYLOAD ANALYSIS
+-----------------------------------------------------------------
+Rows: 50
+Successful: 50
+Factor: datagram_bytes
+
+Descriptive summary:
+dataset         factor  level tenant                   metric  n       mean        std  ci95_low  ci95_high            ci_method
+payload datagram_bytes    256      A            receiver_mbps  5   4.998314   0.000492  4.997929   4.998693 percentile_bootstrap
+payload datagram_bytes    256      A         udp_loss_percent  5   0.014473   0.011284  0.005461   0.022938 percentile_bootstrap
+payload datagram_bytes    256      A   under_load_rtt_mean_ms  5   2.480800   0.175745  2.356200   2.635600 percentile_bootstrap
+payload datagram_bytes    256      A    under_load_rtt_max_ms  5  24.438400   9.918707 17.382000  32.362000 percentile_bootstrap
+payload datagram_bytes    256      A       rss_mean_total_mib  5  66.731493   0.547433 66.354111  67.215305 percentile_bootstrap
+payload datagram_bytes    256      A       rss_peak_total_mib  5  66.892969   0.625467 66.435156  67.350781 percentile_bootstrap
+payload datagram_bytes    256      A rss_mean_per_process_mib  5  33.365747   0.273717 33.177056  33.607652 percentile_bootstrap
+payload datagram_bytes    256      A rss_peak_per_process_mib  5  33.882031   0.614048 33.433594  34.330469 percentile_bootstrap
+payload datagram_bytes    256      A                jitter_ms  5   0.329848   0.091932  0.265738   0.405462 percentile_bootstrap
+payload datagram_bytes    256      B            receiver_mbps  5   4.998625   0.000456  4.998217   4.998896 percentile_bootstrap
+payload datagram_bytes    256      B         udp_loss_percent  5   0.000000   0.000000  0.000000   0.000000 percentile_bootstrap
+payload datagram_bytes    256      B   under_load_rtt_mean_ms  5   4.818200   0.455154  4.476600   5.179000 percentile_bootstrap
+payload datagram_bytes    256      B    under_load_rtt_max_ms  5  81.001000  18.009990 66.008400  94.232800 percentile_bootstrap
+payload datagram_bytes    256      B       rss_mean_total_mib  5  68.824091   0.586640 68.297323  69.092943 percentile_bootstrap
+payload datagram_bytes    256      B       rss_peak_total_mib  5  68.828906   0.587845 68.303125  69.092969 percentile_bootstrap
+payload datagram_bytes    256      B rss_mean_per_process_mib  5  34.412045   0.293320 34.148662  34.546472 percentile_bootstrap
+payload datagram_bytes    256      B rss_peak_per_process_mib  5  35.778125   0.587845 35.252344  36.042187 percentile_bootstrap
+payload datagram_bytes    256      B                jitter_ms  5   0.442815   0.013385  0.432855   0.453194 percentile_bootstrap
+payload datagram_bytes    512      A            receiver_mbps  5   4.999012   0.000222  4.998837   4.999187 percentile_bootstrap
+payload datagram_bytes    512      A         udp_loss_percent  5   0.000000   0.000000  0.000000   0.000000 percentile_bootstrap
+payload datagram_bytes    512      A   under_load_rtt_mean_ms  5   1.940600   0.148038  1.849200   2.070000 percentile_bootstrap
+payload datagram_bytes    512      A    under_load_rtt_max_ms  5   6.660000   0.366746  6.342200   6.923600 percentile_bootstrap
+payload datagram_bytes    512      A       rss_mean_total_mib  5  67.578125   0.000000 67.578125  67.578125 percentile_bootstrap
+payload datagram_bytes    512      A       rss_peak_total_mib  5  67.578125   0.000000 67.578125  67.578125 percentile_bootstrap
+payload datagram_bytes    512      A rss_mean_per_process_mib  5  33.789062   0.000000 33.789062  33.789062 percentile_bootstrap
+payload datagram_bytes    512      A rss_peak_per_process_mib  5  34.554688   0.000000 34.554688  34.554688 percentile_bootstrap
+payload datagram_bytes    512      A                jitter_ms  5   0.176212   0.066738  0.137242   0.237364 percentile_bootstrap
+payload datagram_bytes    512      B            receiver_mbps  5   4.999008   0.000177  4.998900   4.999170 percentile_bootstrap
+payload datagram_bytes    512      B         udp_loss_percent  5   0.000000   0.000000  0.000000   0.000000 percentile_bootstrap
+payload datagram_bytes    512      B   under_load_rtt_mean_ms  5   3.139000   0.196032  3.006200   3.309400 percentile_bootstrap
+payload datagram_bytes    512      B    under_load_rtt_max_ms  5  16.176000   8.348806  9.526000  22.826000 percentile_bootstrap
+payload datagram_bytes    512      B       rss_mean_total_mib  5  69.093750   0.000000 69.093750  69.093750 percentile_bootstrap
+payload datagram_bytes    512      B       rss_peak_total_mib  5  69.093750   0.000000 69.093750  69.093750 percentile_bootstrap
+payload datagram_bytes    512      B rss_mean_per_process_mib  5  34.546875   0.000000 34.546875  34.546875 percentile_bootstrap
+payload datagram_bytes    512      B rss_peak_per_process_mib  5  36.042969   0.000000 36.042969  36.042969 percentile_bootstrap
+payload datagram_bytes    512      B                jitter_ms  5   0.239998   0.077841  0.198141   0.309946 percentile_bootstrap
+payload datagram_bytes    768      A            receiver_mbps  5   4.999279   0.000057  4.999234   4.999324 percentile_bootstrap
+payload datagram_bytes    768      A         udp_loss_percent  5   0.000000   0.000000  0.000000   0.000000 percentile_bootstrap
+payload datagram_bytes    768      A   under_load_rtt_mean_ms  5   1.813400   0.051911  1.772200   1.853200 percentile_bootstrap
+payload datagram_bytes    768      A    under_load_rtt_max_ms  5   8.079800   2.107711  6.975000   9.998600 percentile_bootstrap
+payload datagram_bytes    768      A       rss_mean_total_mib  5  67.578125   0.000000 67.578125  67.578125 percentile_bootstrap
+payload datagram_bytes    768      A       rss_peak_total_mib  5  67.578125   0.000000 67.578125  67.578125 percentile_bootstrap
+payload datagram_bytes    768      A rss_mean_per_process_mib  5  33.789062   0.000000 33.789062  33.789062 percentile_bootstrap
+payload datagram_bytes    768      A rss_peak_per_process_mib  5  34.554688   0.000000 34.554688  34.554688 percentile_bootstrap
+payload datagram_bytes    768      A                jitter_ms  5   0.125584   0.033002  0.101897   0.153252 percentile_bootstrap
+payload datagram_bytes    768      B            receiver_mbps  5   4.998912   0.000143  4.998805   4.999023 percentile_bootstrap
+payload datagram_bytes    768      B         udp_loss_percent  5   0.000000   0.000000  0.000000   0.000000 percentile_bootstrap
+payload datagram_bytes    768      B   under_load_rtt_mean_ms  5   3.851400   0.565142  3.501400   4.343800 percentile_bootstrap
+payload datagram_bytes    768      B    under_load_rtt_max_ms  5  10.106200   1.273254  9.070000  10.987400 percentile_bootstrap
+payload datagram_bytes    768      B       rss_mean_total_mib  5  69.093750   0.000000 69.093750  69.093750 percentile_bootstrap
+payload datagram_bytes    768      B       rss_peak_total_mib  5  69.093750   0.000000 69.093750  69.093750 percentile_bootstrap
+payload datagram_bytes    768      B rss_mean_per_process_mib  5  34.546875   0.000000 34.546875  34.546875 percentile_bootstrap
+payload datagram_bytes    768      B rss_peak_per_process_mib  5  36.042969   0.000000 36.042969  36.042969 percentile_bootstrap
+payload datagram_bytes    768      B                jitter_ms  5   0.204399   0.119673  0.121315   0.311422 percentile_bootstrap
+payload datagram_bytes   1024      A            receiver_mbps  5   4.998949   0.000335  4.998687   4.999211 percentile_bootstrap
+payload datagram_bytes   1024      A         udp_loss_percent  5   0.000000   0.000000  0.000000   0.000000 percentile_bootstrap
+payload datagram_bytes   1024      A   under_load_rtt_mean_ms  5   1.745800   0.087483  1.688600   1.822800 percentile_bootstrap
+payload datagram_bytes   1024      A    under_load_rtt_max_ms  5   6.976800   0.775081  6.414400   7.595000 percentile_bootstrap
+payload datagram_bytes   1024      A       rss_mean_total_mib  5  67.578125   0.000000 67.578125  67.578125 percentile_bootstrap
+payload datagram_bytes   1024      A       rss_peak_total_mib  5  67.578125   0.000000 67.578125  67.578125 percentile_bootstrap
+payload datagram_bytes   1024      A rss_mean_per_process_mib  5  33.789062   0.000000 33.789062  33.789062 percentile_bootstrap
+payload datagram_bytes   1024      A rss_peak_per_process_mib  5  34.554688   0.000000 34.554688  34.554688 percentile_bootstrap
+payload datagram_bytes   1024      A                jitter_ms  5   0.114136   0.026375  0.094521   0.135602 percentile_bootstrap
+payload datagram_bytes   1024      B            receiver_mbps  5   4.998810   0.000828  4.998068   4.999233 percentile_bootstrap
+payload datagram_bytes   1024      B         udp_loss_percent  5   0.000000   0.000000  0.000000   0.000000 percentile_bootstrap
+payload datagram_bytes   1024      B   under_load_rtt_mean_ms  5   5.501200   2.840689  4.180400   8.046200 percentile_bootstrap
+payload datagram_bytes   1024      B    under_load_rtt_max_ms  5 207.139000 439.171024  9.550800 600.283200 percentile_bootstrap
+payload datagram_bytes   1024      B       rss_mean_total_mib  5  69.093750   0.000000 69.093750  69.093750 percentile_bootstrap
+payload datagram_bytes   1024      B       rss_peak_total_mib  5  69.093750   0.000000 69.093750  69.093750 percentile_bootstrap
+payload datagram_bytes   1024      B rss_mean_per_process_mib  5  34.546875   0.000000 34.546875  34.546875 percentile_bootstrap
+payload datagram_bytes   1024      B rss_peak_per_process_mib  5  36.042969   0.000000 36.042969  36.042969 percentile_bootstrap
+payload datagram_bytes   1024      B                jitter_ms  5   0.158685   0.027636  0.137964   0.180277 percentile_bootstrap
+payload datagram_bytes   1200      A            receiver_mbps  5   4.995584   0.007966  4.988446   4.999219 percentile_bootstrap
+payload datagram_bytes   1200      A         udp_loss_percent  5   0.070400   0.157419  0.000000   0.211200 percentile_bootstrap
+payload datagram_bytes   1200      A   under_load_rtt_mean_ms  5   4.519000   0.580815  4.007400   4.895400 percentile_bootstrap
+payload datagram_bytes   1200      A    under_load_rtt_max_ms  5  14.720600  10.134155  8.624400  23.823800 percentile_bootstrap
+payload datagram_bytes   1200      A       rss_mean_total_mib  5  67.601127   0.021336 67.584657  67.617597 percentile_bootstrap
+payload datagram_bytes   1200      A       rss_peak_total_mib  5  67.603125   0.023044 67.585938  67.620312 percentile_bootstrap
+payload datagram_bytes   1200      A rss_mean_per_process_mib  5  33.800564   0.010668 33.792328  33.808799 percentile_bootstrap
+payload datagram_bytes   1200      A rss_peak_per_process_mib  5  34.565625   0.010482 34.557812  34.573437 percentile_bootstrap
+payload datagram_bytes   1200      A                jitter_ms  5   0.305992   0.135153  0.194324   0.405941 percentile_bootstrap
+payload datagram_bytes   1200      B            receiver_mbps  5   4.998306   0.000861  4.997627   4.998953 percentile_bootstrap
+payload datagram_bytes   1200      B         udp_loss_percent  5   0.000000   0.000000  0.000000   0.000000 percentile_bootstrap
+payload datagram_bytes   1200      B   under_load_rtt_mean_ms  5   4.602600   0.041259  4.570800   4.634400 percentile_bootstrap
+payload datagram_bytes   1200      B    under_load_rtt_max_ms  5  15.670800  11.232674 10.052000  25.883200 percentile_bootstrap
+payload datagram_bytes   1200      B       rss_mean_total_mib  5  69.093750   0.000000 69.093750  69.093750 percentile_bootstrap
+payload datagram_bytes   1200      B       rss_peak_total_mib  5  69.093750   0.000000 69.093750  69.093750 percentile_bootstrap
+payload datagram_bytes   1200      B rss_mean_per_process_mib  5  34.546875   0.000000 34.546875  34.546875 percentile_bootstrap
+payload datagram_bytes   1200      B rss_peak_per_process_mib  5  36.042969   0.000000 36.042969  36.042969 percentile_bootstrap
+payload datagram_bytes   1200      B                jitter_ms  5   0.437083   0.565351  0.145399   0.946371 percentile_bootstrap
+
+Welch tests with Holm correction:
+dataset         factor  level                   metric  n_A  n_B  tenant_A_mean  tenant_B_mean  difference_A_minus_B     welch_t      p_value                        test_status  holm_adjusted_p_value  holm_significant_0_05
+payload datagram_bytes    256            receiver_mbps    5    5       4.998314       4.998625             -0.000311   -1.035901 3.307092e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes    256         udp_loss_percent    5    5       0.014473       0.000000              0.014473    2.868018 4.555951e-02                                 ok           8.200712e-01                  False
+payload datagram_bytes    256   under_load_rtt_mean_ms    5    5       2.480800       4.818200             -2.337400  -10.712299 1.007495e-04                                 ok           2.820987e-03                   True
+payload datagram_bytes    256    under_load_rtt_max_ms    5    5      24.438400      81.001000            -56.562600   -6.151449 7.370434e-04                                 ok           1.842608e-02                   True
+payload datagram_bytes    256       rss_mean_total_mib    5    5      66.731493      68.824091             -2.092597   -5.831563 3.979474e-04                                 ok           1.074458e-02                   True
+payload datagram_bytes    256       rss_peak_total_mib    5    5      66.892969      68.828906             -1.935938   -5.043246 1.009245e-03                                 ok           2.422189e-02                   True
+payload datagram_bytes    256 rss_mean_per_process_mib    5    5      33.365747      34.412045             -1.046299   -5.831563 3.979474e-04                                 ok           1.074458e-02                   True
+payload datagram_bytes    256 rss_peak_per_process_mib    5    5      33.882031      35.778125             -1.896094   -4.987591 1.075347e-03                                 ok           2.473299e-02                   True
+payload datagram_bytes    256                jitter_ms    5    5       0.329848       0.442815             -0.112967   -2.719015 5.071968e-02                                 ok           8.622346e-01                  False
+payload datagram_bytes    512            receiver_mbps    5    5       4.999012       4.999008              0.000004    0.029771 9.770147e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes    512         udp_loss_percent    5    5       0.000000       0.000000              0.000000    0.000000 1.000000e+00     both_groups_constant_and_equal           1.000000e+00                  False
+payload datagram_bytes    512   under_load_rtt_mean_ms    5    5       1.940600       3.139000             -1.198400  -10.908637 7.656616e-06                                 ok           2.220419e-04                   True
+payload datagram_bytes    512    under_load_rtt_max_ms    5    5       6.660000      16.176000             -9.516000   -2.546223 6.332459e-02                                 ok           1.000000e+00                  False
+payload datagram_bytes    512       rss_mean_total_mib    5    5      67.578125      69.093750             -1.515625         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes    512       rss_peak_total_mib    5    5      67.578125      69.093750             -1.515625         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes    512 rss_mean_per_process_mib    5    5      33.789062      34.546875             -0.757812         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes    512 rss_peak_per_process_mib    5    5      34.554688      36.042969             -1.488281         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes    512                jitter_ms    5    5       0.176212       0.239998             -0.063786   -1.391053 2.025187e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes    768            receiver_mbps    5    5       4.999279       4.998912              0.000367    5.326447 2.747350e-03                                 ok           5.769435e-02                  False
+payload datagram_bytes    768         udp_loss_percent    5    5       0.000000       0.000000              0.000000    0.000000 1.000000e+00     both_groups_constant_and_equal           1.000000e+00                  False
+payload datagram_bytes    768   under_load_rtt_mean_ms    5    5       1.813400       3.851400             -2.038000   -8.029846 1.216126e-03                                 ok           2.675476e-02                   True
+payload datagram_bytes    768    under_load_rtt_max_ms    5    5       8.079800      10.106200             -2.026400   -1.840111 1.110507e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes    768       rss_mean_total_mib    5    5      67.578125      69.093750             -1.515625         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes    768       rss_peak_total_mib    5    5      67.578125      69.093750             -1.515625         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes    768 rss_mean_per_process_mib    5    5      33.789062      34.546875             -0.757812         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes    768 rss_peak_per_process_mib    5    5      34.554688      36.042969             -1.488281         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes    768                jitter_ms    5    5       0.125584       0.204399             -0.078815   -1.419657 2.197150e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes   1024            receiver_mbps    5    5       4.998949       4.998810              0.000139    0.348375 7.410293e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes   1024         udp_loss_percent    5    5       0.000000       0.000000              0.000000    0.000000 1.000000e+00     both_groups_constant_and_equal           1.000000e+00                  False
+payload datagram_bytes   1024   under_load_rtt_mean_ms    5    5       1.745800       5.501200             -3.755400   -2.954689 4.167580e-02                                 ok           7.918402e-01                  False
+payload datagram_bytes   1024    under_load_rtt_max_ms    5    5       6.976800     207.139000           -200.162200   -1.019137 3.657629e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes   1024       rss_mean_total_mib    5    5      67.578125      69.093750             -1.515625         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes   1024       rss_peak_total_mib    5    5      67.578125      69.093750             -1.515625         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes   1024 rss_mean_per_process_mib    5    5      33.789062      34.546875             -0.757812         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes   1024 rss_peak_per_process_mib    5    5      34.554688      36.042969             -1.488281         NaN          NaN both_groups_constant_but_different                    NaN                  False
+payload datagram_bytes   1024                jitter_ms    5    5       0.114136       0.158685             -0.044550   -2.607630 3.130205e-02                                 ok           6.260411e-01                  False
+payload datagram_bytes   1200            receiver_mbps    5    5       4.995584       4.998306             -0.002722   -0.759733 4.888200e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes   1200         udp_loss_percent    5    5       0.070400       0.000000              0.070400    1.000000 3.739010e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes   1200   under_load_rtt_mean_ms    5    5       4.519000       4.602600             -0.083600   -0.321041 7.641008e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes   1200    under_load_rtt_max_ms    5    5      14.720600      15.670800             -0.950200   -0.140444 8.918171e-01                                 ok           1.000000e+00                  False
+payload datagram_bytes   1200       rss_mean_total_mib    5    5      67.601127      69.093750             -1.492623 -156.429122 1.001757e-08                                 ok           3.205623e-07                   True
+payload datagram_bytes   1200       rss_peak_total_mib    5    5      67.603125      69.093750             -1.490625 -144.645107 1.370244e-08                                 ok           4.110732e-07                   True
+payload datagram_bytes   1200 rss_mean_per_process_mib    5    5      33.800564      34.546875             -0.746311 -156.429122 1.001757e-08                                 ok           3.205623e-07                   True
+payload datagram_bytes   1200 rss_peak_per_process_mib    5    5      34.565625      36.042969             -1.477344 -315.166667 6.080804e-10                                 ok           2.006665e-08                   True
+payload datagram_bytes   1200                jitter_ms    5    5       0.305992       0.437083             -0.131091   -0.504281 6.379918e-01                                 ok           1.000000e+00                  False
+
+Analysis completed.
+Bootstrap replicates: 20000
+Bootstrap seed: 20261101
+Output directory: /mnt/c/Users/SHASHWAT/Desktop/P4-VXLAN-benchmark/results/udp_rss_analysis

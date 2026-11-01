@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import os
+import socket
 import subprocess
+import time
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.node import Switch, OVSSwitch
@@ -9,7 +11,7 @@ from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-JSON = os.path.join(ROOT, "build", "vxlan.json")
+JSON = os.path.join(ROOT, "build","vxlan_final_security.json", "vxlan.json")
 
 
 class P4Switch(Switch):
@@ -32,6 +34,36 @@ class P4Switch(Switch):
         command = " ".join(args)
         self.cmd("%s > %s 2>&1 & echo $! > %s" %
                  (command, self.logfile, self.pidfile))
+
+        # Wait until this BMv2 instance is alive and its Thrift
+        # service accepts connections before installing table rules.
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            pid_output = self.cmd("cat %s 2>/dev/null" % self.pidfile).strip()
+            if not pid_output or not pid_output.isdigit():
+                time.sleep(0.2)
+                continue
+
+            alive = self.cmd("kill -0 %s 2>/dev/null && echo alive" %
+                             pid_output).strip()
+            if alive != "alive":
+                break
+
+            try:
+                with socket.create_connection(
+                    ("127.0.0.1", self.thrift_port), timeout=0.5
+                ):
+                    print("BMv2 Thrift port %s is ready" %
+                          self.thrift_port)
+                    return
+            except OSError:
+                time.sleep(0.2)
+
+        log = self.cmd("cat %s 2>/dev/null" % self.logfile)
+        raise RuntimeError(
+            "BMv2 switch %s failed to become ready on Thrift port %s. "
+            "Log:\n%s" % (self.name, self.thrift_port, log[-3000:])
+        )
 
     def stop(self):
         self.cmd("kill $(cat %s) 2>/dev/null || true" % self.pidfile)

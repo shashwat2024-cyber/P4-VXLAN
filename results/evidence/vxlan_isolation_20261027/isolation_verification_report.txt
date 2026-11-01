@@ -1,0 +1,39 @@
+VXLAN ISOLATION VERIFICATION
+2026-10-27T15:36:36+00:00
+
+Source capture directory: results/scalability/isolation_verification_final_20261027_153206
+
+=== VTEP2 LIVE DECapsulation TABLE ===
+Obtaining JSON from switch...
+Done
+Control utility for runtime P4 table manipulation
+RuntimeCmd: ==========
+TABLE ENTRIES
+**********
+Dumping entry 0x0
+Match key:
+* vxlan.vni           : EXACT     0003e9
+* inner_ipv4.dstAddr  : EXACT     c0a80a02
+Action entry: MyIngress.decapsulate - 01
+**********
+Dumping entry 0x1
+Match key:
+* vxlan.vni           : EXACT     0003ea
+* inner_ipv4.dstAddr  : EXACT     c0a81402
+Action entry: MyIngress.decapsulate - 02
+==========
+Dumping default entry
+Action entry: MyIngress.drop_packet -
+==========
+RuntimeCmd:
+
+=== CAPTURE SUMMARY ===
+--- results/evidence/vxlan_isolation_20261027/h2.pcap
+reading from file results/evidence/vxlan_isolation_20261027/h2.pcap, link-type EN10MB (Ethernet), snapshot length 262144
+15:32:40.894749 IP 192.168.10.1.12345 > 192.168.10.2.9999: UDP, length 20
+15:32:40.894791 IP 192.168.10.2 > 192.168.10.1: ICMP 192.168.10.2 udp port 9999 unreachable, length 56
+--- results/evidence/vxlan_isolation_20261027/h4.pcap
+reading from file results/evidence/vxlan_isolation_20261027/h4.pcap, link-type EN10MB (Ethernet), snapshot length 262144
+
+=== TEST SCRIPT CHECKSUM ===
+561e01df5a4286a4a2289597c456b3c2fe27f69140aca1fd82ff58715acc89db  results/evidence/vxlan_isolation_20261027/test_vxlan_isolation_packets.py

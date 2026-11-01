@@ -4,6 +4,9 @@
 const bit<16> TYPE_IPV4 = 0x0800;
 const bit<8> IP_PROTO_UDP = 17;
 const bit<16> VXLAN_PORT = 4789;
+const bit<9> TENANT_A_PORT = 1;
+const bit<9> TENANT_B_PORT = 2;
+const bit<9> UNDERLAY_PORT = 3;
 
 header ethernet_t {
     bit<48> dstAddr;
@@ -162,7 +165,7 @@ control MyIngress(
         hdr.outer_ipv4.version = 4;
         hdr.outer_ipv4.ihl = 5;
         hdr.outer_ipv4.diffserv = 0;
-        hdr.outer_ipv4.totalLen = hdr.inner_ipv4.totalLen + 16w30;
+        hdr.outer_ipv4.totalLen = hdr.inner_ipv4.totalLen + 16w50;
         hdr.outer_ipv4.identification = 0;
         hdr.outer_ipv4.flags = 0;
         hdr.outer_ipv4.fragOffset = 0;
@@ -232,13 +235,25 @@ control MyIngress(
     }
 
     apply {
-        if (hdr.vxlan.isValid() &&
-            hdr.inner_ethernet.isValid() &&
-            hdr.inner_ipv4.isValid()) {
-            decap_by_vni_and_dst.apply();
-        } else if (hdr.outer_ethernet.isValid() &&
-                   hdr.outer_ipv4.isValid()) {
-            encap_by_port.apply();
+        // Decapsulation is accepted only from the underlay-facing port.
+        if (standard_metadata.ingress_port == UNDERLAY_PORT) {
+            if (hdr.vxlan.isValid() &&
+                hdr.inner_ethernet.isValid() &&
+                hdr.inner_ipv4.isValid()) {
+                decap_by_vni_and_dst.apply();
+            } else {
+                drop_packet();
+            }
+        // Encapsulation is accepted only from tenant-facing ports.
+        } else if (standard_metadata.ingress_port == TENANT_A_PORT ||
+                   standard_metadata.ingress_port == TENANT_B_PORT) {
+            if (!hdr.vxlan.isValid() &&
+                hdr.outer_ethernet.isValid() &&
+                hdr.outer_ipv4.isValid()) {
+                encap_by_port.apply();
+            } else {
+                drop_packet();
+            }
         } else {
             drop_packet();
         }

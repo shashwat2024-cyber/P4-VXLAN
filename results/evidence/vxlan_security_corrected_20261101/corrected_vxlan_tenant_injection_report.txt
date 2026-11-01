@@ -1,0 +1,84 @@
+CORRECTED VXLAN TENANT-ORIGINATED INJECTION TEST
+================================================
+
+Date: 1 November 2026
+Environment: BMv2 simple_switch with Mininet
+Corrected P4 program:
+build/vxlan_corrected_check.json/vxlan.json
+
+1. OBJECTIVE
+------------
+Test whether a tenant-facing interface can inject a crafted VXLAN
+packet using another tenant's VNI and deliver the encapsulated
+traffic to the destination tenant.
+
+2. TEST TOPOLOGY
+----------------
+Attacker-facing interface: vtep1-eth1
+Attacker inner IP:         192.168.10.1
+Target inner IP:           192.168.20.2
+Target UDP port:           9999
+Outer source IP:           10.0.0.1
+Outer destination IP:      10.0.0.2
+Attempted VNI:             1002
+Number of crafted packets: 5
+
+3. POSITIVE CONTROL
+-------------------
+A legitimate Tenant B UDP message was sent from
+192.168.20.1 to 192.168.20.2:9999.
+
+Capture interface: h4-eth0
+Packets captured:  2
+Packets dropped:   0
+
+The captured payloads contained:
+LEGITIMATE_TENANT_B_TEST
+
+Evidence:
+h4_positive_control.pcap
+
+4. ATTACK TEST
+--------------
+Five crafted VXLAN packets were transmitted through the
+Tenant A-facing interface vtep1-eth1.
+
+The packets attempted to carry inner traffic from
+192.168.10.1 to 192.168.20.2 using VNI 1002.
+
+Capture interface: h4-eth0
+Packets captured:  0
+Packets received by filter: 0
+Packets dropped by kernel: 0
+
+Evidence:
+h4_tenant_injection_verified.pcap
+
+5. RESULT
+---------
+No matching attack packets were observed at h4-eth0 during
+the verified capture interval.
+
+The positive control demonstrated that the capture interface
+could observe legitimate UDP traffic addressed to h4.
+
+These observations support the conclusion that the tested
+tenant-originated VXLAN injection attempt was blocked before
+reaching the target host.
+
+6. LIMITATIONS
+--------------
+This test covers one attack scenario, one tenant-facing
+ingress interface, one attempted VNI, one target host and
+one UDP destination port.
+
+It does not establish complete tenant isolation against
+all packet types, ingress interfaces, VNIs, malformed
+packets or attack scenarios.
+
+Further negative tests and packet-level verification are
+required before making a broader security claim.
+
+================================================
+END OF REPORT
+================================================
