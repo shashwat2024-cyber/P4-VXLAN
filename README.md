@@ -67,10 +67,42 @@ python3 -m unittest scripts/test_repeated_analysis.py
 
 The analyzer groups by experiment, configuration, tenant, transport, MSS, payload, duration, MTU and offload so unlike conditions are not pooled. It reports mean, sample standard deviation and approximate two-sided 95% Student-t confidence intervals where there are at least two successful throughput observations. Failed or malformed rows do not contribute to throughput summaries, but stay in the raw file.
 
+## UDP load and RSS-monitoring pilot status (1 November 2026)
+
+An additional WSL2 experiment track is being prepared to measure UDP offered-load scalability and BMv2 switch-process memory alongside the existing latency measurements. These pilots are separate from the previously reported 50-trial UDP application-payload sweep.
+
+The instrumented local scripts use a 500 ms sampling interval to sample resident set size (RSS) for the running `simple_switch` processes. Each successful trial records sample count, sampling interval, mean and peak total RSS across the switch processes, and mean and peak RSS per process. The UDP runs retain concurrent under-load ping measurements; the scalability script also retains its separate post-transfer ping measurement. Under-load RTT and post-transfer latency are different measurements and must not be conflated.
+
+### Pilot observations
+
+**UDP offered-load scalability pilot** — Tenant A, 5 Mbps target, one 5-second trial:
+
+| Metric | Observation |
+|---|---:|
+| Receiver throughput | 4.995 Mbps |
+| UDP loss | 0% |
+| Under-load mean RTT | 1.988 ms |
+| Under-load ping loss | 0% |
+| Separate post-transfer mean RTT | 7.326 ms |
+| RSS samples at 500 ms interval | 11 |
+| Mean total switch-process RSS | 62.746 MiB |
+| Peak total switch-process RSS | 62.855 MiB |
+| Mean RSS per process | 31.373 MiB |
+| Peak RSS per process | 31.438 MiB |
+
+**UDP payload-sweep RSS pilot** — 256-byte datagrams, 5 Mbps target, one 5-second trial per tenant:
+
+| Tenant | Receiver Mbps | UDP loss | Under-load mean RTT | RSS samples | Mean total RSS (MiB) | Peak total RSS (MiB) |
+|---|---:|---:|---:|---:|---:|---:|
+| A | 4.996 | 0% | 2.347 ms | 11 | 64.563 | 64.824 |
+| B | 4.995 | 0% | 2.419 ms | 11 | 64.940 | 64.953 |
+
+These are pilot observations only (one trial per stated condition), not campaign-level estimates or evidence of a causal effect. The full RSS-instrumented offered-load and payload campaigns, raw CSV validation, and statistical/graphical analysis remain pending. The instrumented scripts and pilot CSVs were present in the operator's local WSL2 working tree at the time of this update; they were not yet published in this GitHub branch. Do not treat the pilot CSVs as repository artifacts until the original files are committed.
+
 ## Evidence status and remaining corrections
 The existing 3-second MSS-1000 figures (Tenant A 26.9 and 26.2 Mbps; Tenant B 26.5 Mbps) and earlier 5-/10-second MTU-1450 figures are historical measurements. They are not the output of the new campaign and must not be pooled across different conditions.
 
-The repeated VXLAN campaign and plain-L2 baseline code are present, but live trials have not been run from this environment. UDP application-payload sweep, Scapy-crafted VNI spoofing/wrong-inner-destination tests, packet captures and counters, and scale testing to eight tenants and three or four VTEPs remain outstanding. A failed ping does not prove exactly where a packet was dropped. See docs/experiments/baseline-and-sweeps.md.
+The main repeated VXLAN campaign, plain-L2 baseline, tenant/VTEP scalability checks, crafted-packet isolation work, and the previously reported UDP application-payload sweep are documented in the consolidated addendum. The additional RSS-instrumented UDP offered-load and payload pilots are recorded above; their full campaigns and publication of the new local scripts/raw CSVs remain outstanding. A failed ping does not prove exactly where a packet was dropped. See docs/experiments/baseline-and-sweeps.md and docs/experiments/final-results-addendum-2026-10-27.md.
 
 ## Checksum notes
 The P4 checksum control recalculates the emitted IPv4 header: the new outer IPv4 header on encapsulation, and the restored inner IPv4 header after decapsulation. Outer UDP checksum is set to zero (permitted for IPv4 UDP). P4 input checksum verification is not implemented in the current verify-checksum control. Validate packet captures and checksum behaviour for the actual tested traffic types; do not use endpoint offload settings to obscure a data-plane checksum problem.
