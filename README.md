@@ -67,37 +67,48 @@ python3 -m unittest scripts/test_repeated_analysis.py
 
 The analyzer groups by experiment, configuration, tenant, transport, MSS, payload, duration, MTU and offload so unlike conditions are not pooled. It reports mean, sample standard deviation and approximate two-sided 95% Student-t confidence intervals where there are at least two successful throughput observations. Failed or malformed rows do not contribute to throughput summaries, but stay in the raw file.
 
-## UDP load and RSS-monitoring pilot status (1 November 2026)
+## UDP RSS campaigns and analysis (1 November 2026)
 
-An additional WSL2 experiment track is being prepared to measure UDP offered-load scalability and BMv2 switch-process memory alongside the existing latency measurements. These pilots are separate from the previously reported 50-trial UDP application-payload sweep.
+The RSS-instrumented UDP campaigns were completed in the operator's WSL2 environment. RSS was sampled every 500 ms from the running `simple_switch` processes. Each successful 30-second trial contains 61 RSS samples.
 
-The instrumented local scripts use a 500 ms sampling interval to sample resident set size (RSS) for the running `simple_switch` processes. Each successful trial records sample count, sampling interval, mean and peak total RSS across the switch processes, and mean and peak RSS per process. The UDP runs retain concurrent under-load ping measurements; the scalability script also retains its separate post-transfer ping measurement. Under-load RTT and post-transfer latency are different measurements and must not be conflated.
+### Full campaigns
 
-### Pilot observations
+| Campaign | Conditions | Successful trials |
+|---|---|---:|
+| Offered-load scalability | Ten trials per tenant at 5, 15 and 25 Mbps | 60 |
+| Application payload sweep | Five trials per tenant at 256, 512, 768, 1024 and 1200 bytes; 5 Mbps | 50 |
+| **Total** | | **110** |
 
-**UDP offered-load scalability pilot** — Tenant A, 5 Mbps target, one 5-second trial:
+Local raw CSVs:
+- `results/scalability/udp_scalability_rss_full_20261101.csv`
+- `results/scalability/udp_payload_sweep/udp_payload_rss_full_20261101.csv`
 
-| Metric | Observation |
-|---|---:|
-| Receiver throughput | 4.995 Mbps |
-| UDP loss | 0% |
-| Under-load mean RTT | 1.988 ms |
-| Under-load ping loss | 0% |
-| Separate post-transfer mean RTT | 7.326 ms |
-| RSS samples at 500 ms interval | 11 |
-| Mean total switch-process RSS | 62.746 MiB |
-| Peak total switch-process RSS | 62.855 MiB |
-| Mean RSS per process | 31.373 MiB |
-| Peak RSS per process | 31.438 MiB |
+The campaigns were validated as 60/60 and 50/50 successful rows, respectively, with ten or five trials per tenant/condition as specified and 61 RSS samples in every row.
 
-**UDP payload-sweep RSS pilot** — 256-byte datagrams, 5 Mbps target, one 5-second trial per tenant:
+### Analysis outputs
 
-| Tenant | Receiver Mbps | UDP loss | Under-load mean RTT | RSS samples | Mean total RSS (MiB) | Peak total RSS (MiB) |
-|---|---:|---:|---:|---:|---:|---:|
-| A | 4.996 | 0% | 2.347 ms | 11 | 64.563 | 64.824 |
-| B | 4.995 | 0% | 2.419 ms | 11 | 64.940 | 64.953 |
+The local analysis script `scripts/analyze_udp_rss.py` produces descriptive means and standard deviations, percentile-bootstrap 95% confidence intervals (20,000 resamples; fixed seed 20261101), Welch comparisons, Holm-adjusted p-values, and per-metric graphs. Comparisons with constant observations in both groups are flagged rather than assigned a misleading Welch p-value.
 
-These are pilot observations only (one trial per stated condition), not campaign-level estimates or evidence of a causal effect. The full RSS-instrumented offered-load and payload campaigns, raw CSV validation, and statistical/graphical analysis remain pending. The instrumented scripts and pilot CSVs were present in the operator's local WSL2 working tree at the time of this update; they were not yet published in this GitHub branch. Do not treat the pilot CSVs as repository artifacts until the original files are committed.
+Local analysis outputs are under `results/udp_rss_analysis/`, including:
+- `scalability_summary.csv` and `scalability_welch_tests.csv`
+- `payload_summary.csv` and `payload_welch_tests.csv`
+- the `scalability_*.png` and `payload_*.png` graphs
+- `original_vs_new_udp_comparison.csv`
+- `revised_analysis_log.txt`
+
+The comparison file contains 30 payload rows and 18 offered-load rows. The original payload campaign and new payload campaign each have five successful trials per tenant/payload condition. For offered-load comparison, the separate 30-row original campaign contains one failed trial and only four successful Tenant B trials at 15 Mbps; failed rows are excluded from means but retained in the original raw file. The separate 39-row original campaign is not pooled with that comparison because its Tenant B coverage is incomplete.
+
+### Interpretation and limitations
+
+The new campaigns achieved receiver throughput close to the configured offered rates. The earlier 256-byte Tenant B payload result (mean loss 2.0674% in the original five-trial campaign) was not reproduced in the new five-trial campaign (0% observed mean loss). This is a campaign-to-campaign descriptive difference, not proof of a fix or a causal explanation. RSS readings that are constant across all trials are reported descriptively; they are not treated as inferential evidence. The bootstrap intervals and tests are exploratory given the small number of trials, and statistical significance must be interpreted with the Holm correction.
+
+The local CSVs, script, analysis summaries and PNGs are not yet claimed as published repository artifacts until the original files are committed. Do not reconstruct raw trial data from the summary values in this README.
+
+### P4 correctness update
+
+The project branch now contains an ingress-gated VXLAN pipeline change in `src/p4/vxlan.p4`: decapsulation is restricted to underlay ingress port 3; encapsulation is restricted to tenant-facing ports 1 and 2; tenant-originated packets parsed as VXLAN are dropped. The outer IPv4 total-length assignment is set to inner IPv4 total length +50, while the outer UDP length remains inner IPv4 total length +30, following the project's correction specification.
+
+This source update has not yet been recompiled or exercised in the user's WSL2 environment after publication. Runtime attack verification, before/after packet captures, Linux VXLAN/Wireshark interoperability and routed-underlay validation remain required. Port numbers are specific to the current two-VTEP topology.
 
 ## Evidence status and remaining corrections
 The existing 3-second MSS-1000 figures (Tenant A 26.9 and 26.2 Mbps; Tenant B 26.5 Mbps) and earlier 5-/10-second MTU-1450 figures are historical measurements. They are not the output of the new campaign and must not be pooled across different conditions.
