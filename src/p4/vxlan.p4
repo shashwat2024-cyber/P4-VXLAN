@@ -162,7 +162,9 @@ control MyIngress(
         hdr.outer_ipv4.version = 4;
         hdr.outer_ipv4.ihl = 5;
         hdr.outer_ipv4.diffserv = 0;
-        hdr.outer_ipv4.totalLen = hdr.inner_ipv4.totalLen + 16w30;
+        // IPv4 totalLen includes outer IPv4 (20), UDP (8), VXLAN (8),
+        // inner Ethernet (14), and the complete inner IPv4 packet.
+        hdr.outer_ipv4.totalLen = hdr.inner_ipv4.totalLen + 16w50;
         hdr.outer_ipv4.identification = 0;
         hdr.outer_ipv4.flags = 0;
         hdr.outer_ipv4.fragOffset = 0;
@@ -232,12 +234,21 @@ control MyIngress(
     }
 
     apply {
-        if (hdr.vxlan.isValid() &&
-            hdr.inner_ethernet.isValid() &&
-            hdr.inner_ipv4.isValid()) {
-            decap_by_vni_and_dst.apply();
+        // Port 3 is the underlay-facing port on each VTEP.
+        // VXLAN-shaped packets from tenant-facing ports must never decapsulate.
+        if (hdr.vxlan.isValid()) {
+            if (standard_metadata.ingress_port == 3 &&
+                hdr.inner_ethernet.isValid() &&
+                hdr.inner_ipv4.isValid()) {
+                decap_by_vni_and_dst.apply();
+            } else {
+                drop_packet();
+            }
         } else if (hdr.outer_ethernet.isValid() &&
-                   hdr.outer_ipv4.isValid()) {
+                   hdr.outer_ipv4.isValid() &&
+                   (standard_metadata.ingress_port == 1 ||
+                    standard_metadata.ingress_port == 2)) {
+            // Only tenant-facing ports may initiate encapsulation.
             encap_by_port.apply();
         } else {
             drop_packet();

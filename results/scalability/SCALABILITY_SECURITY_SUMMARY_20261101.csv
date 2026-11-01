@@ -1,0 +1,7 @@
+experiment,tenants,vteps,legitimate_passed,legitimate_total,cross_tenant_blocked,cross_tenant_total,spoofed_source_blocked,spoofed_source_total,result
+tenant_scaling,2,2,4,4,4,4,4,4,PASS
+tenant_scaling,4,2,8,8,24,24,8,8,PASS
+tenant_scaling,6,2,12,12,60,60,12,12,PASS (retest)
+tenant_scaling,8,2,16,16,112,112,16,16,PASS
+vtep_scaling,2,3,12,12,12,12,12,12,PASS
+vtep_scaling,2,4,24,24,24,24,24,24,PASS

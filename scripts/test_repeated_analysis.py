@@ -29,5 +29,92 @@ class SummaryStatsTests(unittest.TestCase):
         self.assertAlmostEqual(analysis.T95[9], 2.262)
         self.assertAlmostEqual(analysis.T95[1], 12.706)
 
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from campaign_validation import validate_campaign_rows
+
+
+class CampaignValidationTests(unittest.TestCase):
+    campaign = "campaign-A"
+    configurations = ["P4_VXLAN"]
+    tenants = ["A"]
+    mss_values = [500]
+    trials = 2
+
+    def make_rows(self):
+        return [
+            {
+                "campaign_id": self.campaign,
+                "configuration": "P4_VXLAN",
+                "tenant": "A",
+                "mss_bytes": "500",
+                "trial_number": str(number),
+                "status": "success",
+            }
+            for number in (1, 2)
+        ]
+
+    def validate(self, rows):
+        return validate_campaign_rows(
+            rows,
+            self.campaign,
+            self.configurations,
+            self.tenants,
+            self.mss_values,
+            self.trials,
+        )
+
+    def test_complete_campaign_passes(self):
+        self.assertEqual(self.validate(self.make_rows()), [])
+
+    def test_row_with_missing_csv_field_is_rejected(self):
+        rows = self.make_rows()
+        rows[0]["transport"] = None
+
+        errors = self.validate(rows)
+
+        self.assertTrue(
+            any("missing fields in CSV row" in error for error in errors),
+            errors,
+        )
+
+    def test_missing_trial_is_rejected(self):
+        errors = self.validate(self.make_rows()[:1])
+        self.assertTrue(any("Missing trial 2" in error for error in errors))
+
+    def test_duplicate_trial_is_rejected(self):
+        rows = self.make_rows()
+        rows.append(dict(rows[0]))
+        errors = self.validate(rows)
+        self.assertTrue(any("Duplicate trial" in error for error in errors))
+
+    def test_failed_trial_is_rejected(self):
+        rows = self.make_rows()
+        rows[1]["status"] = "failed"
+        errors = self.validate(rows)
+        self.assertTrue(any("not 'success'" in error for error in errors))
+
+    def test_unexpected_condition_is_rejected(self):
+        rows = self.make_rows()
+        rows[0]["tenant"] = "C"
+        errors = self.validate(rows)
+        self.assertTrue(any("unexpected condition" in error for error in errors))
+
+    def test_other_campaign_rows_do_not_count(self):
+        rows = self.make_rows()
+        rows[0]["campaign_id"] = "campaign-B"
+        errors = self.validate(rows)
+        self.assertTrue(
+            any("Missing trial 1" in error for error in errors),
+            errors,
+        )
+        self.assertFalse(
+            any("Duplicate trial" in error for error in errors),
+            errors,
+        )
+
+
+
 if __name__ == "__main__":
     unittest.main()

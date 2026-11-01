@@ -1,0 +1,2 @@
+campaign_id,trial_number,experiment_id,timestamp_utc,configuration,tenant,transport,target_mbps,duration_seconds,receiver_mbps,udp_loss_percent,latency_ms,ping_loss_percent,status,command,notes
+udp_scalability_recovery_20261027,1,20261027T123454Z-280c8d78,2026-10-27T12:34:55.148925+00:00,P4_VXLAN_UDP,B,UDP,15,30,14.998568599196076,0.0,5.719,0.0,success,iperf3 -c 192.168.20.2 -u -b 15M -t 30 -J,git_commit=5d8ac01ca3d39e3a2744558641c453d9a9a9725b

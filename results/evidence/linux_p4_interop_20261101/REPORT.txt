@@ -1,0 +1,29 @@
+LINUX VXLAN AND P4 VTEP INTEROPERABILITY
+Date: 2026-11-01
+VNI: 1003
+Underlay: Routed IPv4 via router r1
+VXLAN UDP destination port: 4789
+
+Test 1: Linux VXLAN to P4
+Linux endpoint: 10.0.3.2
+P4 VTEP1 underlay endpoint: 10.0.1.2
+Linux VXLAN interface: vxlan-test
+Inner source: 192.168.10.254
+Inner destination: 192.168.10.1 (h1)
+Packets sent: 3
+Packets received at h1: 3
+Capture drops: 0
+
+Test 2: P4 to Linux VXLAN
+Inner source: 192.168.10.1 (h1)
+Inner destination: 192.168.10.254
+Packets sent: 3
+Packets received on Linux vxlan-test: 3
+Capture drops: 0
+
+All six application payloads were observed intact.
+The tests demonstrate bidirectional Linux-kernel VXLAN and BMv2
+P4 VTEP interoperability over a routed IPv4 underlay.
+
+The temporary VTEP1 encapsulation entry was restored to VNI 1001
+after the reverse-direction test.

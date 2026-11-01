@@ -1,0 +1,27 @@
+timestamp_utc,occupancy_target,vtep1_entries,vtep2_entries,tenant,trial,target_mbps,receiver_mbps,udp_loss_percent,status,notes
+2026-10-27T13:01:14.331442+00:00,2,2,2,A,1,5,0.0,100.0,error,"iperf3 result parse failed: Expecting value: line 1 column 1 (char 0); output=ation_percent"":	{
+			""host_total"":	0.000283376852327879,
+			""host_user"":	0.00028441791350468972,
+			""host_system"":	0,
+			""remote_total"":	0,
+			""remote_user"":	0,
+			""remote_system"":	0
+		}
+	},
+	""error"":	""interrupt - the client has terminated""
+}
+iperf_errexit: pthread_mutex_unlock: Success
+"
+2026-10-27T13:01:32.373200+00:00,2,2,2,B,1,5,0.0,100.0,error,"iperf3 result parse failed: Expecting value: line 1 column 1 (char 0); output=ion_percent"":	{
+			""host_total"":	0.00039423160640501733,
+			""host_user"":	0,
+			""host_system"":	0.00039535564675505762,
+			""remote_total"":	0,
+			""remote_user"":	0,
+			""remote_system"":	0
+		}
+	},
+	""error"":	""interrupt - the client has terminated""
+}
+iperf_errexit: pthread_mutex_unlock: Success
+"

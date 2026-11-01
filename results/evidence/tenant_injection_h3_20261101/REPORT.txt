@@ -1,0 +1,28 @@
+TENANT-ORIGINATED VXLAN INJECTION TEST — H3
+Date: 2026-11-01
+Build: Corrected P4 VXLAN build
+
+Attack:
+- Attacker ingress: vtep1-eth1 (Tenant A)
+- Outer UDP destination port: 4789
+- VXLAN VNI: 1002
+- Inner source IP: 192.168.10.1
+- Inner destination IP: 192.168.20.1 (h3)
+- Inner destination MAC: 00:00:00:00:20:01
+- Crafted packets sent: 5
+- Packets captured at h3 on UDP destination port 9999: 0
+
+Positive control:
+- Legitimate sender: h4 (192.168.20.2)
+- Receiver: h3 (192.168.20.1)
+- UDP destination port: 9999
+- Legitimate packets sent: 3
+- Packets captured at h3: 3
+
+Conclusion:
+The corrected build blocked the tested tenant-originated VXLAN
+injection while legitimate Tenant B traffic reached h3.
+
+Limitation:
+This is corrected-build validation. A vulnerable-build before/after
+comparison has not yet been demonstrated.

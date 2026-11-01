@@ -1,0 +1,38 @@
+P4 VXLAN SECURITY VERIFICATION
+Date: 31 October 2026
+
+1. PURPOSE
+Verify that legitimate VXLAN traffic arriving through the underlay interface
+is decapsulated and delivered, while VXLAN-shaped traffic injected through
+a tenant-facing interface is rejected.
+
+2. LEGITIMATE UNDERLAY VXLAN TEST
+Ingress interface: vtep1-eth3 (underlay, port 3)
+VNI: 1001
+Inner destination: 192.168.10.2
+UDP destination port: 9999
+
+Result: One matching packet was captured at h2.
+Interpretation: Legitimate underlay VXLAN traffic was delivered successfully.
+
+Evidence: h2_underlay_valid.pcap
+
+3. TENANT-SIDE VXLAN INJECTION TEST
+Ingress interface: vtep1-eth1 (tenant-facing, port 1)
+VNI: 1001
+Inner destination: 192.168.10.2
+UDP destination port: 9999
+
+Result: Zero matching packets were captured at h2.
+Interpretation: The tenant-originated VXLAN-shaped packet was not delivered
+to h2, consistent with the ingress-port decapsulation restriction.
+
+Evidence: h2_tenant_injection.pcap
+
+4. CONCLUSION
+The tests provide packet-capture evidence that legitimate VXLAN traffic
+arriving on the underlay interface is delivered, while the tested
+VXLAN-shaped packet arriving on a tenant-facing interface is not delivered.
+
+This verification covers the tested packet and interfaces. It does not
+establish protection against every possible attack or malformed packet.

@@ -1,0 +1,2 @@
+mode,tenants,vteps,connectivity_passed,connectivity_total,connectivity_ok,setup_seconds,test_seconds,notes
+tenants,2,2,0,4,0,2.275,8.043,"tenant=1 vtep1->2: ['1 packets transmitted, 0 received, 100% packet loss, time 0ms'] | tenant=1 vtep2->1: ['1 packets transmitted, 0 received, 100% packet loss, time 0ms'] | tenant=2 vtep1->2: ['1 packets transmitted, 0 received, 100% packet loss, time 0ms']"
